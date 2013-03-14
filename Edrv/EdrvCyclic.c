@@ -78,7 +78,7 @@
 #error "EdrvCyclic needs EPL_TIMER_USE_HIGHRES = TRUE"
 #endif
 
-
+#define EDRVI210
 
 /***************************************************************************/
 /*                                                                         */
@@ -120,6 +120,8 @@ typedef struct
     tEplTimerHdl        m_TimerHdlSlot;
     tEdrvCyclicCbSync   m_pfnCbSync;
     tEdrvCyclicCbError  m_pfnCbError;
+    //TODO: Set in conditional compilation
+    unsigned long long  m_ullNextCycleTime;
 
 #if EDRV_CYCLIC_USE_DIAGNOSTICS != FALSE
     unsigned int        m_uiSampleNo;
@@ -391,7 +393,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplKernel EdrvCyclicStartCycle (void)
 {
 tEplKernel      Ret = kEplSuccessful;
-
+QWORD			qwCurrMacTime;
     if (EdrvCyclicInstance_l.m_dwCycleLenUs == 0)
     {
         Ret = kEplEdrvInvalidCycleLen;
@@ -404,6 +406,8 @@ tEplKernel      Ret = kEplSuccessful;
     EPL_MEMSET(EdrvCyclicInstance_l.m_paTxBufferList, 0,
         sizeof (*EdrvCyclicInstance_l.m_paTxBufferList) * EdrvCyclicInstance_l.m_uiMaxTxBufferCount * 2);
 
+    EdrvGetMacClock(&qwCurrMacTime);
+    EdrvCyclicInstance_l.m_ullNextCycleTime = (qwCurrMacTime + (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL) + 20000ULL);
     Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
         EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL,
         EdrvCyclicCbTimerCycle,
@@ -762,12 +766,17 @@ Exit:
 
 static tEplKernel EdrvCyclicProcessTxBufferList(void)
 {
-tEplKernel      Ret = kEplSuccessful;
-tEdrvTxBuffer*  pTxBuffer;
+tEplKernel      	Ret = kEplSuccessful;
+tEdrvTxBuffer*  	pTxBuffer;
+BOOL				bFirstPacket = TRUE;
+unsigned long long	ullLaunchTime;
+
+	ullLaunchTime = EdrvCyclicInstance_l.m_ullNextCycleTime;
 
     while ((pTxBuffer = EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry]) != NULL)
     {
-        if (pTxBuffer->m_dwTimeOffsetNs == 0)
+#ifndef EDRVI210
+    	if (pTxBuffer->m_dwTimeOffsetNs == 0)
         {
             Ret = EdrvSendTxMsg(pTxBuffer);
             if (Ret != kEplSuccessful)
@@ -787,8 +796,32 @@ tEdrvTxBuffer*  pTxBuffer;
         }
 
         EdrvCyclicInstance_l.m_uiCurTxBufferEntry++;
+#else
+        if(bFirstPacket)
+        {
+        	pTxBuffer->m_qwLaunchTime = ullLaunchTime + (QWORD)pTxBuffer->m_dwTimeOffsetNs;
+
+        	bFirstPacket = FALSE;
+        }
+        else
+        {
+        	ullLaunchTime = ullLaunchTime + (QWORD)pTxBuffer->m_dwTimeOffsetNs;
+        	pTxBuffer->m_qwLaunchTime =  ullLaunchTime;
+        }
+      //  printk("Lt: %lld\n",pTxBuffer->m_qwLaunchTime);
+
+        Ret = EdrvSendTxMsg(pTxBuffer);
+        if (Ret != kEplSuccessful)
+        {
+             goto Exit;
+        }
+        pTxBuffer->m_qwLaunchTime = 0;
+
+        EdrvCyclicInstance_l.m_uiCurTxBufferEntry++;
+#endif
     }
 
+    EdrvCyclicInstance_l.m_ullNextCycleTime += (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL);
 Exit:
     if (Ret != kEplSuccessful)
     {

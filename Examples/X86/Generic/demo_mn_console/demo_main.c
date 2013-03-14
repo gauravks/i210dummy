@@ -986,7 +986,7 @@ tEplKernel PUBLIC AppCbSync(void)
     {
         return EplRet;
     }
-
+#if 0
     uiCnt_g++;
 
     nodeVar_g[0].m_uiInput = AppProcessImageOut_g.CN1_M00_Digital_Input_8_Bit_Byte_1;
@@ -1040,7 +1040,7 @@ tEplKernel PUBLIC AppCbSync(void)
     AppProcessImageIn_g.CN1_M00_Digital_Ouput_8_Bit_Byte_1 = nodeVar_g[0].m_uiLeds;
     AppProcessImageIn_g.CN32_M00_Digital_Ouput_8_Bit_Byte_1 = nodeVar_g[1].m_uiLeds;
     AppProcessImageIn_g.CN110_M00_Digital_Ouput_8_Bit_Byte_1 = nodeVar_g[2].m_uiLeds;
-
+#endif
     return EplRet;
 }
 
