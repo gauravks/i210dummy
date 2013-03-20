@@ -77,6 +77,7 @@
 #define DEVICE_ID 0x1533
 
 #define PROMICIOUS_MODE
+//#define	QAV_MODE
 #define CONFIG_BAR  0
 #define DRIVER_NAME "epl"
 
@@ -119,6 +120,16 @@
 #define EDRV_MRQC_REG			 0x05818
 #define EDRV_EEER_REG			 0x00E30
 
+#define SDP0_SET_DIR_OUT		0x00400000
+#define SDP0_SET_HIGH			0x00040000
+#define SDP1_SET_DIR_OUT		0x00800000
+#define SDP1_SET_HIGH			0x00080000
+#define SDP2_SET_DIR_OUT    	0x00000400
+#define SDP3_SET_DIR_OUT    	0x00000800
+#define SDP2_SET_HIGH       	0x00000040
+#define SDP3_SET_HIGH       	0x00000080
+
+
 #define EDRV_SWSM_SMBI           0x00000001
 #define EDRV_SWSM_SWESMBI        0x00000002  // Software EEPROM Semaphore Bit
 #define EDRV_TIPG_DEF            0x00601008
@@ -132,6 +143,7 @@
 #define EDRV_TXPBSIZE_REG		 0x03404
 #define EDRV_RXPBSIZE_REG		 0x02404
 #define EDRV_TQAVCTRL_REG        0x03570
+#define EDRV_LAUNCH_OSO			 0x03578
 #define EDRV_TQAVARBCTRL_REG	 0x03574 // TODO :Verify this register
 #define EDRV_TXPBSIZE_DEF		 0x04104208 // 8 Kb TQ0, 8Kb TQ1, 4 Kb TQ2, 4Kb TQ3 and 4 Kb Os2Bmc
 #define EDRV_TSAUXC_SAMP_AUTO	 0x00000008
@@ -250,11 +262,11 @@
 #define EDRV_LINK_UP_TIMEOUT            3000 // ms
 #define EDRV_AUTO_READ_DONE_TIMEOUT		  10
 // Tx Descriptor Defines
-#define EDRV_MAX_TX_DESCRIPTOR          64  //Max no of Desc in mem
+#define EDRV_MAX_TX_DESCRIPTOR          256  //Max no of Desc in mem
 #define EDRV_MAX_TX_DESC_LEN           (EDRV_MAX_TX_DESCRIPTOR - 1)     //one slot to diff full
 
 #ifndef EDRV_MAX_TX_BUFFERS
-#define EDRV_MAX_TX_BUFFERS    			42			//Max no of Buffers
+#define EDRV_MAX_TX_BUFFERS    			256			//Max no of Buffers
 #endif
 
 #define EDRV_MAX_FRAME_SIZE             0x600 // 1536
@@ -284,7 +296,7 @@
 #define EDRV_TXDCTL_WTHRESH             0
 #define EDRV_TXDCTL_QUEUE_EN            0x02000000
 #define EDRV_TXDCTL_PRIORITY			(1 << 27)
-#define EDRV_TQAVCTRL_TXMODE		(1 << 0 )
+#define EDRV_TQAVCTRL_TXMODE			(1 << 0 )
 #define EDRV_TQAVCTRL_FETCH_ARB 		(1 << 4 )
 #define EDRV_TQAVCTRL_DTRANSARB			(1 << 8 )
 #define EDRV_TQAVCTRL_TRANSTIM			(1 << 9 )
@@ -292,15 +304,16 @@
 #define EDRV_TQAVCTRL_1588_STAT_EN		(1 << 2 )
 #define EDRV_TQAVCC_QUEUE_MODE_SR			(1 << 31)
 #define EDRV_TQAVCTRL_FETCH_TM_SHIFT	16
+#define EDRV_LAUNCH_OSO_SHIFT			5
 
 #define EDRV_TQAVARBCTRL_TXQPRIO(_q, _n)  (((_n) & 0x3) << (_q << 2))
 #define EDRV_TXPBSIZE_TX1PB_SHIFT    6
 #define EDRV_TXPBSIZE_TX2PB_SHIFT    12
 #define EDRV_TXPBSIZE_TX3PB_SHIFT    18
 //Rx Descriptor Defines
-#define EDRV_MAX_RX_DESCRIPTOR          64  //Max no of Desc in mem
+#define EDRV_MAX_RX_DESCRIPTOR          256  //Max no of Desc in mem
 #define EDRV_MAX_RX_DESC_LEN           (EDRV_MAX_RX_DESCRIPTOR - 1)
-#define EDRV_MAX_RX_BUFFERS             64  //Max no of Buffers
+#define EDRV_MAX_RX_BUFFERS             256  //Max no of Buffers
 #define EDRV_RX_BUFFER_SIZE             (EDRV_MAX_RX_BUFFERS * EDRV_MAX_FRAME_SIZE)
 #define EDRV_RX_DESCS_SIZE              (EDRV_MAX_RX_DESCRIPTOR * sizeof(tEdrvAdvRxDesc))
 
@@ -331,9 +344,9 @@
 #define EDRV_SRRCTL_DESCTYPE_ADV (1 << 25) // Advance Rx Descriptor one buffer
 #define EDRV_SRRCTL_TIMESTAMP	(1 << 30) // Time stamp received packets
 #define EDRV_SRRCTL_DROP_EN		(1 << 31) // drop packets if no descriptors available
-#define EDRV_RXDCTL_PTHRESH     1
-#define EDRV_RXDCTL_HTHRESH     1
-#define EDRV_RXDCTL_WTHRESH     1
+#define EDRV_RXDCTL_PTHRESH     0
+#define EDRV_RXDCTL_HTHRESH     0
+#define EDRV_RXDCTL_WTHRESH     0
 #define EDRV_RXDCTL_QUEUE_EN    (1 << 25)
 #define EDRV_STAT_TPR           0x040D0
 #define EDRV_STAT_GPRC			0x04074
@@ -376,6 +389,7 @@
 #define EDRV_COUNT_RX_ERR_OTHER         TGT_DBG_SIGNAL_TRACE_POINT(17)
 #define EDRV_COUNT_RX_ORUN              TGT_DBG_SIGNAL_TRACE_POINT(18)
 
+
 #define EDRV_TRACE_CAPR(x)              TGT_DBG_POST_TRACE_VALUE(((x) & 0xFFFF) | 0x06000000)
 #define EDRV_TRACE_RX_CRC(x)            TGT_DBG_POST_TRACE_VALUE(((x) & 0xFFFF) | 0x0E000000)
 #define EDRV_TRACE_RX_ERR(x)            TGT_DBG_POST_TRACE_VALUE(((x) & 0xFFFF) | 0x0F000000)
@@ -403,7 +417,7 @@ typedef union {
 		__le32 m_dwStatusIdxPaylen;
 	} m_sRead;
 	struct {
-		__le64 m_le_qwRsvd;       /* Reserved */
+		__le64 m_le_qwTimeStamp;       /* Reserved */
 		__le32 m_le_dwRsvd;
 		__le32 m_le_dwstatus;
 	} m_sWb;
@@ -453,7 +467,7 @@ typedef struct
 typedef struct
 {
 	dma_addr_t		m_DmaAddr;
-	void 		   *m_VirtAddr;
+	BYTE 		   *m_VirtAddr;
 	unsigned int	m_uilen;
 
 }tEdrvPktBuff;
@@ -597,6 +611,13 @@ tEplKernel EdrvInit(tEdrvInitParam * pEdrvInitParam_p)
 	// clear instance structure
 	EPL_MEMSET(&EdrvInstance_l, 0, sizeof (EdrvInstance_l));
 
+	if(NULL != pEdrvInitParam_p)
+	{
+		// save the init data
+		EdrvInstance_l.m_InitParam = *pEdrvInitParam_p;
+	}
+
+
 	// clear driver structure
 	EPL_MEMSET(&EdrvDriver, 0, sizeof (EdrvDriver));
 
@@ -669,7 +690,9 @@ static inline struct device *pci_dev_to_dev(struct pci_dev *pdev)
 //---------------------------------------------------------------------------
 tEplKernel EdrvDefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 {
+	tEplKernel      Ret = kEplSuccessful;
 
+	    return Ret;
 }
 //---------------------------------------------------------------------------
 //
@@ -697,6 +720,74 @@ tEplKernel      Ret = kEplSuccessful;
 
     return Ret;
 }
+
+void EdrvSetGpio(INT iPinNo)
+{
+	DWORD dwReg;
+
+	dwReg = 0;
+
+	switch(iPinNo)
+	{
+	case 0:
+		dwReg = EDRV_REGDW_READ(EDRV_CTRL_REG);
+		dwReg &= ~SDP0_SET_HIGH;
+		dwReg |= SDP0_SET_DIR_OUT;
+		EDRV_REGDW_WRITE(EDRV_CTRL_REG,dwReg);
+		break;
+	case 1:
+		dwReg = EDRV_REGDW_READ(EDRV_CTRL_REG);
+		dwReg &= ~SDP1_SET_HIGH;
+		dwReg |= SDP1_SET_DIR_OUT;
+		EDRV_REGDW_WRITE(EDRV_CTRL_REG,dwReg);
+		break;
+	case 2:
+		dwReg = EDRV_REGDW_READ(EDRV_CTRL_EXTN_REG);
+		dwReg &= ~SDP2_SET_HIGH;
+		dwReg |= SDP2_SET_DIR_OUT;
+		EDRV_REGDW_WRITE(EDRV_CTRL_EXTN_REG,dwReg);
+		break;
+	case 3:
+		dwReg = EDRV_REGDW_READ(EDRV_CTRL_EXTN_REG);
+		dwReg &= ~SDP3_SET_HIGH;
+		dwReg |= SDP3_SET_DIR_OUT;
+		EDRV_REGDW_WRITE(EDRV_CTRL_EXTN_REG,dwReg);
+		break;
+	}
+
+}
+void EdrvClearGpio(INT iPinNo)
+{
+	DWORD dwReg;
+
+	dwReg = 0;
+
+	switch(iPinNo)
+	{
+	case 0:
+		dwReg = EDRV_REGDW_READ(EDRV_CTRL_REG);
+		dwReg |= SDP0_SET_HIGH;
+		EDRV_REGDW_WRITE(EDRV_CTRL_REG,dwReg);
+		break;
+	case 1:
+		dwReg = EDRV_REGDW_READ(EDRV_CTRL_REG);
+		dwReg |= SDP1_SET_HIGH;
+		EDRV_REGDW_WRITE(EDRV_CTRL_REG,dwReg);
+		break;
+	case 2:
+		dwReg = EDRV_REGDW_READ(EDRV_CTRL_EXTN_REG);
+		dwReg |= SDP2_SET_HIGH;
+		EDRV_REGDW_WRITE(EDRV_CTRL_EXTN_REG,dwReg);
+		break;
+	case 3:
+		dwReg = EDRV_REGDW_READ(EDRV_CTRL_EXTN_REG);
+		dwReg |= SDP3_SET_HIGH;
+		EDRV_REGDW_WRITE(EDRV_CTRL_EXTN_REG,dwReg);
+		break;
+	}
+
+}
+
 //---------------------------------------------------------------------------
 //
 // Function:    EdrvAllocTxMsgBuffer
@@ -777,10 +868,11 @@ tEplKernel EdrvReleaseTxMsgBuffer     (tEdrvTxBuffer * pBuffer_p)
 
   return kEplSuccessful;
 }
+#ifdef QAV_MODE
 int
-EdrvGetMacClock( QWORD	*pqwCurtime_p)
+EdrvGetMacClock( __u64	*pqwCurtime_p)
 {
-	QWORD	t0, t1;
+	__u64	t0, t1;
 	DWORD	timh, timl;
 
 	if (NULL == pqwCurtime_p) return -1;
@@ -793,11 +885,12 @@ EdrvGetMacClock( QWORD	*pqwCurtime_p)
 	timl = EDRV_REGDW_READ(EDRV_AUXSTMPL0);
 	timh = EDRV_REGDW_READ(EDRV_AUXSTMPH0);
 
-	*pqwCurtime_p = (QWORD)timh * 1000000000 + (QWORD)timl;
+	*pqwCurtime_p = (__u64)timh * 1000000000 + (__u64)timl;
 
 
 	return(0);
 }
+#endif
 //---------------------------------------------------------------------------
 //
 // Function:    EdrvSendTxMsg
@@ -821,9 +914,10 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 	tEdrvContextDesc 	*pTxCxtDesc;
 	INT					iQueue = 0,iIndex = 0;
 	dma_addr_t 			TxDma;
+#ifdef QAV_MODE
 	QWORD				qwCurtime;
 	QWORD				qwLaunchTime,qwTime;
-
+#endif
 	uiBufferNumber = pTxBuffer_p->m_BufferNumber.m_dwVal;
 
 	//printk("Send Msg\n");
@@ -833,18 +927,28 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 	        Ret = kEplEdrvBufNotExisting;
 	        goto Exit;
 	}
+
+
 #ifdef USE_MULTIPLE_QUEUE
 	//TODO: Assign queue based on Packet Type
 #else
 	pTxQueue = EdrvInstance_l.m_pTxQueue[iQueue];
 
 	iIndex = pTxQueue->m_iNextDesc;
+#ifdef QAV_MODE
 	if(((iIndex + 2) & EDRV_MAX_TX_DESC_LEN) == pTxQueue->m_iNextWb)
 	{
 		Ret = kEplEdrvNoFreeTxDesc;
 		goto Exit;
 	}
-
+#else
+	if(((iIndex + 1) & EDRV_MAX_TX_DESC_LEN) == pTxQueue->m_iNextWb)
+		{
+			Ret = kEplEdrvNoFreeTxDesc;
+			goto Exit;
+		}
+#endif
+#ifdef QAV_MODE
 	pTxCxtDesc = EDRV_GET_CTXT_DESC(pTxQueue,iIndex);
 
 	pTxCxtDesc->m_dwIdxL4lenMss = 0;
@@ -855,13 +959,17 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 	//printk("Lt: %lld\n",qwLaunchTime);
 	do_div(qwLaunchTime,1000000000);
 	qwTime = pTxBuffer_p->m_qwLaunchTime - (qwLaunchTime * 1000000000);
+
+	//pTxBuffer_p->m_qwLaunchTime = qwTime;
+	//wmb();
+	//printk("Qt: %lld\n",qwTime);
 	do_div(qwTime,32);
 	pTxCxtDesc->m_dwLaunchTime = qwTime;
-	//printk("Qt:%lld\n",qwTime);
+
 	pTxCxtDesc->m_dwTucmdType = (EDRV_TDESC_CMD_DEXT | EDRV_TDESC_DTYP_CTXT) ;
 
 	iIndex =  ((iIndex + 1) & EDRV_MAX_TX_DESC_LEN);
-
+#endif
 	pTxAdvDesc = EDRV_GET_TX_DESC(pTxQueue,iIndex);
 
 	TxDma = dma_map_single(pci_dev_to_dev(EdrvInstance_l.m_pPciDev),\
@@ -875,6 +983,10 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 	    goto Exit;
 	}
 
+	if(pTxBuffer_p->m_pbBuffer[14] == 1)
+		{
+			TgtDbgSignalTracePoint(25);
+		}
 	pTxQueue->m_apTxBuffer[iIndex] = pTxBuffer_p;
 	EDRV_COUNT_SEND;
 	pTxQueue->m_PktBuff[iIndex].m_DmaAddr = TxDma;
@@ -889,7 +1001,7 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 				   	   	   	   	   	   	   	   	   EDRV_TDESC_CMD_IFCS |\
 				   	   	   	   	   	   	   	   	   EDRV_TDESC_CMD_RS) ;
 	pTxAdvDesc->m_sRead.m_dwStatusIdxPaylen = (pTxBuffer_p->m_uiTxMsgLen << 14);
-	pTxAdvDesc->m_sRead.m_dwStatusIdxPaylen |= (1 << 1);
+//	pTxAdvDesc->m_sRead.m_dwStatusIdxPaylen |= (1 << 1);
 
 	iIndex =  ((iIndex + 1) & EDRV_MAX_TX_DESC_LEN);
 
@@ -944,6 +1056,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	DWORD           dwStatus;
 	int             iHandled;
 	INT				iIndex;
+
 	tEdrvQueue *pTxQueue = EdrvInstance_l.m_pTxQueue[0];
 	tEdrvQueue *pRxQueue = EdrvInstance_l.m_pRxQueue[0];
 
@@ -965,104 +1078,146 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	}
 	//EDRV_REGDW_WRITE(EDRV_INTR_READ_REG,dwStatus);
 
-	if ((dwStatus & ( EDRV_INTR_ICR_RXDW | EDRV_INTR_ICR_RXDMT0 | // Receive interrupt
-						EDRV_INTR_ICR_TXDW)) != 0)
+	//Process Rx
+	if ((dwStatus & ( EDRV_INTR_ICR_RXDW | EDRV_INTR_ICR_RXDMT0)) != 0)
 	{
-		do
+		tEdrvAdvRxDesc*    pAdvRxDesc;
+		tEdrvRxBuffer      RxBuffer;
+		iIndex = pRxQueue->m_iNextWb;
+
+		pAdvRxDesc = EDRV_GET_RX_DESC(pRxQueue,iIndex);
+		//printk("st:%x Wb:%d\n",pAdvRxDesc->sWb.m_dwExtStatusError,iIndex);
+		while((pAdvRxDesc->sWb.m_dwExtStatusError & EDRV_RDESC_STATUS_DD) && \
+				(pAdvRxDesc->sWb.m_dwExtStatusError & EDRV_RDESC_STATUS_EOP))
 		{
-			tEdrvAdvRxDesc*    pAdvRxDesc;
-			tEdrvAdvTxDesc*    pAdvTxDesc;
-
-			iIndex = pRxQueue->m_iNextWb;
-			pAdvRxDesc = EDRV_GET_RX_DESC(pRxQueue,iIndex);
-			//printk("st:%x Wb:%d\n",pAdvRxDesc->sWb.m_dwExtStatusError,iIndex);
-			while((pAdvRxDesc->sWb.m_dwExtStatusError & EDRV_RDESC_STATUS_DD) && \
-					(pAdvRxDesc->sWb.m_dwExtStatusError & EDRV_RDESC_STATUS_EOP))
+			UINT					uiRcvLen;
+			if(pAdvRxDesc->sWb.m_dwExtStatusError & EDRV_RDESC_ERRORS_RXE)
 			{
-
-				tEdrvRxBuffer           RxBuffer;
-				UINT					uiRcvLen;
-				if(pAdvRxDesc->sWb.m_dwExtStatusError & EDRV_RDESC_ERRORS_RXE)
-				{
-					EDRV_COUNT_RX_ERR_CRC;
-				}
-				else
-				{
-					// good packet
-					RxBuffer.m_BufferInFrame = kEdrvBufferLastInFrame;
-					uiRcvLen = (0x0000FFFF & pAdvRxDesc->sWb.m_dwLenVlanTag);
-					RxBuffer.m_uiRxMsgLen = uiRcvLen;
-					//printk("RXLen : %d\n",uiRcvLen);
-					RxBuffer.m_pbBuffer = pRxQueue->m_PktBuff[iIndex].m_VirtAddr;
-					EDRV_COUNT_RX;
-
-					dma_sync_single_for_cpu(pci_dev_to_dev(EdrvInstance_l.m_pPciDev),\
-											pRxQueue->m_PktBuff[iIndex].m_DmaAddr,\
-											RxBuffer.m_uiRxMsgLen,\
-											DMA_FROM_DEVICE);
-
-					//printk("%x\n",RxBuffer.m_pbBuffer[14]);
-					// Forward the Rcv packet to DLL
-					EdrvInstance_l.m_InitParam.m_pfnRxHandler(&RxBuffer);
-
-					// Prepare descriptor for next Rcv
-					pAdvRxDesc->sRead.m_le_qwBufferAddr = pRxQueue->m_PktBuff[iIndex].m_DmaAddr;
-					pAdvRxDesc->sRead.m_le_qwHeaderAddr = 0;
-					iIndex =((iIndex + 1) & EDRV_MAX_RX_DESC_LEN);
-					pRxQueue->m_iNextWb = iIndex;
-
-					pAdvRxDesc = EDRV_GET_RX_DESC(pRxQueue,iIndex);
-
-				}
-
-			}
-
-			iIndex = pTxQueue->m_iNextWb;
-			pAdvTxDesc = EDRV_GET_TX_DESC(pTxQueue,iIndex);
-			//printk("Process Tx1\n");
-			if(pAdvTxDesc->m_sWb.m_le_dwstatus & EDRV_TDESC_STATUS_DD)
-			{
-				//printk("Process Tx\n");
-				// Process the send packet
-				tEdrvTxBuffer*  pTxBuffer;
-				DWORD           dwTxStatus;
-
-				dwTxStatus = pAdvTxDesc->m_sWb.m_le_dwstatus;
-				pAdvTxDesc->m_sWb.m_le_dwstatus = 0;
-
-				pTxBuffer = pTxQueue->m_apTxBuffer[iIndex];
-				pTxQueue->m_apTxBuffer[iIndex] = NULL;
-
-				dma_unmap_single(&EdrvInstance_l.m_pPciDev->dev,\
-												 pTxQueue->m_PktBuff[iIndex].m_DmaAddr,\
-												 pTxQueue->m_PktBuff[iIndex].m_uilen, \
-												 DMA_TO_DEVICE);
-				iIndex =((iIndex + 1) & EDRV_MAX_TX_DESC_LEN);
-				pTxQueue->m_iNextWb = iIndex;
-
-
-				EDRV_COUNT_TX;
-				if (pTxBuffer != NULL)
-				{
-				     // Call Tx handler of Data link layer
-				    if (pTxBuffer->m_pfnTxHandler != NULL)
-				    {
-				    	pTxBuffer->m_pfnTxHandler(pTxBuffer);
-				    }
-				}
-				else
-				{
-					EDRV_COUNT_TX_FUN;
-				}
+				EDRV_COUNT_RX_ERR_CRC;
+				//printk("R1\n");
 			}
 			else
 			{
-				iIndex =((iIndex + 1) & EDRV_MAX_TX_DESC_LEN);
-				pTxQueue->m_iNextWb = iIndex;
-				//break;
-			}
+				//EdrvSetGpio(2);
+				//printk("R\n");
+				// good packet
+				//printk("T:%d H:%d\n",EDRV_REGDW_READ(EDRV_RDTAIL(pRxQueue->m_iIndex)),EDRV_REGDW_READ(EDRV_RDTAIL(pRxQueue->m_iIndex)));
+				RxBuffer.m_BufferInFrame = kEdrvBufferLastInFrame;
+				uiRcvLen = (0x0000FFFF & pAdvRxDesc->sWb.m_dwLenVlanTag);
+				RxBuffer.m_uiRxMsgLen = uiRcvLen;
+				//printk("RXLen : %d\n",uiRcvLen);
+				RxBuffer.m_pbBuffer = (BYTE *)pRxQueue->m_PktBuff[iIndex].m_VirtAddr;
+				EDRV_COUNT_RX;
 
-		}while(pTxQueue->m_iNextWb != pTxQueue->m_iNextDesc);
+				dma_sync_single_for_cpu(pci_dev_to_dev(EdrvInstance_l.m_pPciDev),\
+										pRxQueue->m_PktBuff[iIndex].m_DmaAddr,\
+										uiRcvLen,\
+										DMA_FROM_DEVICE);
+
+				//printk("%x\n",RxBuffer.m_pbBuffer[14]);
+				// Forward the Rcv packet to DLL
+				if(NULL != EdrvInstance_l.m_InitParam.m_pfnRxHandler)
+				{
+					EdrvInstance_l.m_InitParam.m_pfnRxHandler(&RxBuffer);
+				}
+				else
+				{
+					printk("[EPL]:No Rx CallBack Registered\n");
+				}
+
+				// Prepare descriptor for next Rcv
+				pAdvRxDesc->sRead.m_le_qwBufferAddr = (__le64)pRxQueue->m_PktBuff[iIndex].m_DmaAddr;
+				pAdvRxDesc->sRead.m_le_qwHeaderAddr = 0;
+				//pAdvRxDesc->sWb.m_dwExtStatusError = 0;
+				EDRV_REGDW_WRITE(EDRV_RDTAIL(pRxQueue->m_iIndex),iIndex);
+				iIndex =((iIndex + 1) & EDRV_MAX_RX_DESC_LEN);
+				pRxQueue->m_iNextWb = iIndex;
+
+				pAdvRxDesc = EDRV_GET_RX_DESC(pRxQueue,iIndex);
+				//break;
+				//EdrvClearGpio(2);
+			}
+		}
+	}
+
+	//Process Tx
+	if ((dwStatus & (EDRV_INTR_ICR_TXDW)) != 0)
+	{
+		EDRV_COUNT_TX;
+		//printk("Tx \n");
+		do
+		{
+			EDRV_COUNT_TX_TEST;
+			tEdrvAdvTxDesc*    pAdvTxDesc;
+			iIndex = 0;
+#ifdef QAV_MODE
+			iIndex = ((pTxQueue->m_iNextWb + 1) & EDRV_MAX_TX_DESC_LEN);
+#else
+			iIndex = pTxQueue->m_iNextWb;
+#endif
+			pAdvTxDesc = EDRV_GET_TX_DESC(pTxQueue,iIndex);
+
+			if(pTxQueue->m_apTxBuffer[iIndex] != NULL)
+			{
+				if(pAdvTxDesc->m_sWb.m_le_dwstatus & EDRV_TDESC_STATUS_DD)
+				{
+								//printk("Process Tx\n");
+					// Process the send packet
+					tEdrvTxBuffer*  pTxBuffer;
+					DWORD           dwTxStatus;
+								QWORD 			Lat,Sec;
+								//printk("T\n");
+								dwTxStatus = pAdvTxDesc->m_sWb.m_le_dwstatus;
+								pAdvTxDesc->m_sWb.m_le_dwstatus = 0;
+								pTxBuffer = pTxQueue->m_apTxBuffer[iIndex];
+								pTxQueue->m_apTxBuffer[iIndex] = NULL;
+
+								if(pTxBuffer->m_pbBuffer[14] == 1)
+								{
+									TgtDbgSignalTracePoint(26);
+								}
+								//Sec = (0xFFFFFFFF & pAdvTxDesc->m_sWb.m_le_qwTimeStamp);
+								//Lat = Sec - pTxBuffer->m_qwLaunchTime ;
+								//printk("(%lld - %lld) = %lld\n ",Sec,pTxBuffer->m_qwLaunchTime,Lat);
+								//printk("Type %d\n",pTxQueue->m_PktBuff[iIndex].m_VirtAddr[14]);
+								dma_unmap_single(&EdrvInstance_l.m_pPciDev->dev,\
+												 pTxQueue->m_PktBuff[iIndex].m_DmaAddr,\
+												 pTxQueue->m_PktBuff[iIndex].m_uilen, \
+												 DMA_TO_DEVICE);
+								iIndex =((iIndex + 1) & EDRV_MAX_TX_DESC_LEN);
+								pTxQueue->m_iNextWb = iIndex;
+
+
+								EDRV_COUNT_TX;
+								if (pTxBuffer != NULL)
+								{
+									 // Call Tx handler of Data link layer
+									if (pTxBuffer->m_pfnTxHandler != NULL)
+									{
+										pTxBuffer->m_pfnTxHandler(pTxBuffer);
+									}
+								}
+								else
+								{
+									EDRV_COUNT_TX_FUN;
+								}
+								//break;
+							}
+							else
+							{
+								//printk("T3\n");
+								break;
+							}
+						}
+						else
+						{
+								//printk("T2\n");
+								//iIndex =((iIndex + 1) & EDRV_MAX_TX_DESC_LEN);
+								//pTxQueue->m_iNextWb = iIndex;
+								break;
+						}
+
+			}while(pTxQueue->m_iNextWb != pTxQueue->m_iNextDesc);
 	}
 Exit:
 	return iHandled;
@@ -1399,7 +1554,7 @@ static void EdrvFreeTxQueueBuffer(tEdrvQueue *pTxQueue_p)
 
 */
 //------------------------------------------------------------------------------
-void EdrvFreeTxBuffers(void)
+static void EdrvFreeTxBuffers(void)
 {
 	//tEdrvQueue *TxQueue;
 	int iIndex;
@@ -1683,6 +1838,11 @@ static tEplKernel EdrvInitRxQueue(tEdrvQueue *pRxQueue_p)
 	memset(pRxQueue_p->m_pDescVirt,0,EDRV_RX_DESCS_SIZE);
 
 	pRxQueue_p->m_PktBuff = kzalloc(EDRV_MAX_RX_DESCRIPTOR * sizeof(tEdrvPktBuff),GFP_KERNEL);
+	if(NULL == pRxQueue_p->m_PktBuff)
+	{
+		iResult = kEplEdrvInitError;
+		goto Exit;
+	}
 
 	pRxQueue_p->m_pbBuf = kzalloc(EDRV_RX_BUFFER_SIZE, GFP_KERNEL);
 
@@ -1809,7 +1969,7 @@ static void EdrvConfigureRxQueue(tEdrvQueue *pRxQueue_p )
 		printk("....Done\n");
 	}
 }
-
+#ifdef QAV_MODE
 //------------------------------------------------------------------------------
 /**
 \brief EdrvInitQavMode
@@ -1824,6 +1984,7 @@ static void EdrvConfigureRxQueue(tEdrvQueue *pRxQueue_p )
 static void EdrvInitQavMode( void )
 {
 	DWORD	  dwTqavctrl;
+	DWORD	  dwLaunchOff;
 	DWORD	  dwTqavcc0 , dwTqavcc1;
 	DWORD  	  dwTxpbsize, dwRxpbsize;
 
@@ -1854,6 +2015,8 @@ static void EdrvInitQavMode( void )
 		EDRV_REGDW_WRITE(EDRV_TQAVCC(0), dwTqavcc0);
 
 
+
+
 		dwTqavctrl = 0;
 		dwTqavctrl = EDRV_TQAVCTRL_TXMODE | \
 						EDRV_TQAVCTRL_FETCH_ARB | \
@@ -1865,6 +2028,11 @@ static void EdrvInitQavMode( void )
 		dwTqavctrl |= (5 << 5) << EDRV_TQAVCTRL_FETCH_TM_SHIFT ;
 
 		EDRV_REGDW_WRITE(EDRV_TQAVCTRL_REG, dwTqavctrl);
+
+		dwLaunchOff = 0;
+		dwLaunchOff |= (4 << 5) << EDRV_LAUNCH_OSO_SHIFT;
+
+		EDRV_REGDW_WRITE(EDRV_LAUNCH_OSO,dwLaunchOff);
 #ifdef USE_MULTIPLE_QUEUE
 		/* set Q0 to highest priority, Q3 to the lowest .. */
 		EDRV_REGDW_WRITE(EDRV_TQAVARBCTRL_REG, \
@@ -1875,6 +2043,7 @@ static void EdrvInitQavMode( void )
 #endif
 
 }
+#endif
 //------------------------------------------------------------------------------
 /**
 \brief 	EdrvInitOne
@@ -2067,8 +2236,6 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	sSysTime = ktime_to_timespec(ktime_get_real());
 	EdrvPtpWrite(&sSysTime);
 
-	printk("Start time ns:%d sec:%d",(int)sSysTime.tv_nsec,(int)sSysTime.tv_sec);
-
 
 	// Clear the Statistic register
 	//TODO: Add other required registers
@@ -2136,8 +2303,10 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	    }
 	 }
 
+#ifdef QAV_MODE
 	 // Configure device for Qav mode
 	 EdrvInitQavMode();
+#endif
 
 	 // Setup Tx Configuration
 
@@ -2232,7 +2401,8 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	    printk("Link Down\n");
 	    goto Exit;
 	 }
-goto Exit;
+	// EdrvClearGpio(1);
+	 goto Exit;
 
 ExitQueue:
 	//TODO:Call free queues here

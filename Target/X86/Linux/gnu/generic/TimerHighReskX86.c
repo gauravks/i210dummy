@@ -327,7 +327,7 @@ tEplTimerHighReskTimerInfo*  pTimerInfo;
 ktime_t                      RelTime;
 
     Ret = kEplSuccessful;
-
+//printk("Time%lld\n",ullTimeNs_p);
     // check pointer to handle
     if(pTimerHdl_p == NULL)
     {
@@ -382,6 +382,7 @@ ktime_t                      RelTime;
         {
             ullTimeNs_p = TIMER_MIN_VAL_CYCLE;
         }
+
     }
     else
     {
@@ -389,6 +390,7 @@ ktime_t                      RelTime;
         {
             ullTimeNs_p = TIMER_MIN_VAL_SINGLE;
         }
+
     }
 
     pTimerInfo->m_EventArg.m_Arg.m_dwVal = ulArgument_p;

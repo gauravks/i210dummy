@@ -750,16 +750,14 @@ tEplNmtState    NmtState;
 
         case kEplEventTypeDllkCycleFinish:
         {
-
-            Ret = EplDllkProcessCycleFinish(EplDllkInstance_g.m_NmtState);
+        	Ret = EplDllkProcessCycleFinish(EplDllkInstance_g.m_NmtState);
 
             break;
         }
 
         case kEplEventTypeSync:
         {
-
-            Ret = EplDllkProcessSync(EplDllkInstance_g.m_NmtState);
+        	Ret = EplDllkProcessSync(EplDllkInstance_g.m_NmtState);
 
             break;
         }
@@ -2520,8 +2518,7 @@ tEplNmtState    NmtState;
 #if (EPL_DLL_PROCESS_SYNC == EPL_DLL_PROCESS_SYNC_ON_SOA)
             if (EplDllkInstance_g.m_DllState != kEplDllGsInit)
             {   // cyclic state is active, so preprocessing is necessary
-
-                Ret = EplDllkProcessSync(NmtState);
+            	Ret = EplDllkProcessSync(NmtState);
             }
 //            BENCHMARK_MOD_02_TOGGLE(7);
 #endif
@@ -2650,6 +2647,7 @@ tEdrvTxBuffer*  pTxBuffer;
 tEplFrameInfo   FrameInfo;
 unsigned int    uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetCycle ^ 1;
 
+TgtDbgSignalTracePoint(24);
     if (EplDllkInstance_g.m_pfnCbSync != NULL)
     {
         Ret = EplDllkInstance_g.m_pfnCbSync();
@@ -3925,6 +3923,7 @@ tEplFrame*              pFrame;
 tEplFrameInfo           FrameInfo;
 tEplMsgType             MsgType;
 
+
 TGT_DLLK_DECLARE_FLAGS
 
     TGT_DLLK_ENTER_CRITICAL_SECTION();
@@ -3934,7 +3933,7 @@ TGT_DLLK_DECLARE_FLAGS
 
     if (NmtState <= kEplNmtGsResetConfiguration)
     {
-        goto Exit;
+       goto Exit;
     }
 
     pFrame = (tEplFrame *) pRxBuffer_p->m_pbBuffer;
@@ -5629,6 +5628,7 @@ TGT_DLLK_DECLARE_FLAGS
         && (EplDllkInstance_g.m_fSyncProcessed == FALSE))
     {   // cyclic state is active, so preprocessing is necessary
         EplDllkInstance_g.m_fSyncProcessed = TRUE;
+        //printk("S\n");
         Ret = EplDllkPostEvent(kEplEventTypeSync);
         if (Ret != kEplSuccessful)
         {

@@ -265,7 +265,9 @@ tEplKernel EdrvChangeFilter(tEdrvFilter*    pFilter_p,
                             unsigned int    uiChangeFlags_p);
 
 int
-EdrvGetMacClock( QWORD	*pqwCurtime_p);
+EdrvGetMacClock( __u64	*pqwCurtime_p);
+void EdrvClearGpio(INT iPinNo);
+void EdrvSetGpio(INT iPinNo);
 
 int EdrvGetDiagnostics(char* pszBuffer_p, int iSize_p);
 

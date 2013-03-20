@@ -176,7 +176,7 @@
 #ifdef CONFIG_MN
 
 // activate PResChaining support on MN
-#define EPL_DLL_PRES_CHAINING_MN            TRUE
+#define EPL_DLL_PRES_CHAINING_MN            FALSE
 
 // CN supports PRes Chaining
 #define EPL_DLL_PRES_CHAINING_CN            FALSE
