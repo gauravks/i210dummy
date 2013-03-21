@@ -77,7 +77,7 @@
 #define DEVICE_ID 0x1533
 
 #define PROMICIOUS_MODE
-//#define	QAV_MODE
+#define	QAV_MODE
 #define CONFIG_BAR  0
 #define DRIVER_NAME "epl"
 
@@ -293,7 +293,7 @@
 #define EDRV_TCTL_EXT_COLD              0x0000FC00 // default value as per 802.3 spec
 #define EDRV_TXDCTL_PTHRESH             0
 #define EDRV_TXDCTL_HTHRESH             0
-#define EDRV_TXDCTL_WTHRESH             0
+#define EDRV_TXDCTL_WTHRESH             2
 #define EDRV_TXDCTL_QUEUE_EN            0x02000000
 #define EDRV_TXDCTL_PRIORITY			(1 << 27)
 #define EDRV_TQAVCTRL_TXMODE			(1 << 0 )
@@ -346,7 +346,7 @@
 #define EDRV_SRRCTL_DROP_EN		(1 << 31) // drop packets if no descriptors available
 #define EDRV_RXDCTL_PTHRESH     0
 #define EDRV_RXDCTL_HTHRESH     0
-#define EDRV_RXDCTL_WTHRESH     0
+#define EDRV_RXDCTL_WTHRESH     1
 #define EDRV_RXDCTL_QUEUE_EN    (1 << 25)
 #define EDRV_STAT_TPR           0x040D0
 #define EDRV_STAT_GPRC			0x04074
@@ -691,7 +691,7 @@ static inline struct device *pci_dev_to_dev(struct pci_dev *pdev)
 tEplKernel EdrvDefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 {
 	tEplKernel      Ret = kEplSuccessful;
-
+	printk("%s\n",__FUNCTION__);
 	    return Ret;
 }
 //---------------------------------------------------------------------------
@@ -709,7 +709,9 @@ tEplKernel EdrvDefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 //---------------------------------------------------------------------------
 tEplKernel EdrvUndefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 {
-
+	tEplKernel      Ret = kEplSuccessful;
+	printk("%s\n",__FUNCTION__);
+		    return Ret;
 }
 tEplKernel EdrvChangeFilter(tEdrvFilter*    pFilter_p,
                             unsigned int    uiCount_p,
@@ -812,7 +814,7 @@ tEplKernel EdrvAllocTxMsgBuffer       (tEdrvTxBuffer * pBuffer_p)
 	     Ret = kEplEdrvNoFreeBufEntry;
 	     goto Exit;
 	}
-
+printk("%s\n",__FUNCTION__);
 	if (EdrvInstance_l.m_pbTxBuf == NULL)
 	{
         printk("%s Tx buffers currently not allocated\n", __FUNCTION__);
@@ -857,7 +859,7 @@ Exit:
 tEplKernel EdrvReleaseTxMsgBuffer     (tEdrvTxBuffer * pBuffer_p)
 {
 	unsigned int uiBufferNumber;
-
+	printk("%s\n",__FUNCTION__);
 	uiBufferNumber = pBuffer_p->m_BufferNumber.m_dwVal;
 
 	if (uiBufferNumber < EDRV_MAX_TX_BUFFERS)
@@ -925,6 +927,7 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 	        || (EdrvInstance_l.m_afTxBufUsed[uiBufferNumber] == FALSE))
 	{
 	        Ret = kEplEdrvBufNotExisting;
+
 	        goto Exit;
 	}
 
@@ -933,10 +936,11 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 	//TODO: Assign queue based on Packet Type
 #else
 	pTxQueue = EdrvInstance_l.m_pTxQueue[iQueue];
-
+	printk("{%s} W:%d N:%d\n",__FUNCTION__,pTxQueue->m_iNextWb,pTxQueue->m_iNextDesc);
 	iIndex = pTxQueue->m_iNextDesc;
 #ifdef QAV_MODE
-	if(((iIndex + 2) & EDRV_MAX_TX_DESC_LEN) == pTxQueue->m_iNextWb)
+	//if(((iIndex + 2) & EDRV_MAX_TX_DESC_LEN) == pTxQueue->m_iNextWb)
+	if(iIndex + 1 == 256)
 	{
 		Ret = kEplEdrvNoFreeTxDesc;
 		goto Exit;
@@ -1004,12 +1008,13 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 //	pTxAdvDesc->m_sRead.m_dwStatusIdxPaylen |= (1 << 1);
 
 	iIndex =  ((iIndex + 1) & EDRV_MAX_TX_DESC_LEN);
-
-	// Transmit the packet
-	EDRV_REGDW_WRITE(EDRV_TDTAIL(iQueue),iIndex);
-
 	// increment Tx descriptor queue tail pointer
 	pTxQueue->m_iNextDesc = iIndex;
+	// Transmit the packet
+	EDRV_REGDW_WRITE(EDRV_TDTAIL(iQueue),iIndex);
+	mmiowb();
+
+
 #endif
 
 Exit:
@@ -1032,7 +1037,9 @@ Exit:
 
 tEplKernel EdrvReleaseRxBuffer(tEdrvRxBuffer* pRxBuffer_p)
 {
-
+	tEplKernel      Ret = kEplSuccessful;
+	printk("%s\n",__FUNCTION__);
+	return Ret;
 }
 //---------------------------------------------------------------------------
 //
@@ -1084,9 +1091,9 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 		tEdrvAdvRxDesc*    pAdvRxDesc;
 		tEdrvRxBuffer      RxBuffer;
 		iIndex = pRxQueue->m_iNextWb;
-
+		printk("RX\n");
 		pAdvRxDesc = EDRV_GET_RX_DESC(pRxQueue,iIndex);
-		//printk("st:%x Wb:%d\n",pAdvRxDesc->sWb.m_dwExtStatusError,iIndex);
+
 		while((pAdvRxDesc->sWb.m_dwExtStatusError & EDRV_RDESC_STATUS_DD) && \
 				(pAdvRxDesc->sWb.m_dwExtStatusError & EDRV_RDESC_STATUS_EOP))
 		{
@@ -1098,6 +1105,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 			}
 			else
 			{
+				printk("Wb:%d\n",iIndex);
 				//EdrvSetGpio(2);
 				//printk("R\n");
 				// good packet
@@ -1134,7 +1142,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 				pRxQueue->m_iNextWb = iIndex;
 
 				pAdvRxDesc = EDRV_GET_RX_DESC(pRxQueue,iIndex);
-				//break;
+				break;
 				//EdrvClearGpio(2);
 			}
 		}
@@ -1144,17 +1152,19 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	if ((dwStatus & (EDRV_INTR_ICR_TXDW)) != 0)
 	{
 		EDRV_COUNT_TX;
-		//printk("Tx \n");
-		do
+		printk("Tx \n");
+		while(pTxQueue->m_iNextWb != pTxQueue->m_iNextDesc)
 		{
 			EDRV_COUNT_TX_TEST;
 			tEdrvAdvTxDesc*    pAdvTxDesc;
 			iIndex = 0;
-#ifdef QAV_MODE
-			iIndex = ((pTxQueue->m_iNextWb + 1) & EDRV_MAX_TX_DESC_LEN);
-#else
+//#ifdef QAV_MODE
+//			iIndex = ((pTxQueue->m_iNextWb + 1) & EDRV_MAX_TX_DESC_LEN);
+//			printk("W:%d N:%d\n",pTxQueue->m_iNextWb,pTxQueue->m_iNextDesc);
+//#else
 			iIndex = pTxQueue->m_iNextWb;
-#endif
+			printk("W:%d N:%d\n",pTxQueue->m_iNextWb,pTxQueue->m_iNextDesc);
+//#endif
 			pAdvTxDesc = EDRV_GET_TX_DESC(pTxQueue,iIndex);
 
 			if(pTxQueue->m_apTxBuffer[iIndex] != NULL)
@@ -1212,12 +1222,12 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 						else
 						{
 								//printk("T2\n");
-								//iIndex =((iIndex + 1) & EDRV_MAX_TX_DESC_LEN);
-								//pTxQueue->m_iNextWb = iIndex;
-								break;
+								iIndex =((iIndex + 1) & EDRV_MAX_TX_DESC_LEN);
+								pTxQueue->m_iNextWb = iIndex;
+								//break;
 						}
 
-			}while(pTxQueue->m_iNextWb != pTxQueue->m_iNextDesc);
+			}
 	}
 Exit:
 	return iHandled;

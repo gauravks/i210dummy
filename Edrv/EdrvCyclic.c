@@ -78,7 +78,7 @@
 #error "EdrvCyclic needs EPL_TIMER_USE_HIGHRES = TRUE"
 #endif
 
-//#define EDRVI210
+#define EDRVI210
 
 /***************************************************************************/
 /*                                                                         */
@@ -105,7 +105,7 @@
 
 #define EDRV_SHIFT		50000ULL
 #define EDRV_MIN_SHIFT	5000ULL
-#define EDRV_POS_SHIFT	50000ULL
+#define EDRV_POS_SHIFT	25000ULL
 //---------------------------------------------------------------------------
 // local types
 //---------------------------------------------------------------------------
@@ -414,7 +414,7 @@ printk("S\n");
     }
 #ifdef EDRVI210
     //set initial time value for TX Process duration
-  /*   EdrvCyclicInstance_l.m_dwTxProcDur = EDRV_POS_SHIFT;
+  /*  EdrvCyclicInstance_l.m_dwTxProcDur = EDRV_POS_SHIFT;
 
      //initialize the filter
      for(iIndex=0; iIndex<8; iIndex++)
@@ -472,7 +472,7 @@ tEplKernel EdrvCyclicStopCycle (void)
 tEplKernel      Ret = kEplSuccessful;
 
     Ret = EplTimerHighReskDeleteTimer(&EdrvCyclicInstance_l.m_TimerHdlCycle);
-    Ret = EplTimerHighReskDeleteTimer(&EdrvCyclicInstance_l.m_TimerHdlSlot);
+    //Ret = EplTimerHighReskDeleteTimer(&EdrvCyclicInstance_l.m_TimerHdlSlot);
 
 #if EDRV_CYCLIC_USE_DIAGNOSTICS != FALSE
     EdrvCyclicInstance_l.m_ullStartCycleTimeStamp = 0;
@@ -641,7 +641,7 @@ unsigned long long ullStartNewCycleTimeStamp;
    // printk("Get MacTime\n");
 #ifdef EDRVI210
     //get timer tick before calling TX Process
- //   EdrvGetMacClock(&dwMacTime1);
+//    EdrvGetMacClock(&dwMacTime1);
 #endif
     Ret = EdrvCyclicProcessTxBufferList();
 
@@ -651,7 +651,7 @@ unsigned long long ullStartNewCycleTimeStamp;
         goto Exit;
     }
 #ifdef EDRVI210
-/*    EdrvGetMacClock(&dwMacTime2);
+    /*  EdrvGetMacClock(&dwMacTime2);
     //obtain absolute difference
 
     //printk("Cb:%lld\n",dwMacTimeDiff);
@@ -896,7 +896,7 @@ EdrvGetMacClock(&qwCurrMacTime);
     	{
     		EdrvCyclicInstance_l.m_ullNextCycleTime = qwCurrMacTime + EDRV_SHIFT;
     		ullLaunchTime = EdrvCyclicInstance_l.m_ullNextCycleTime;
-    	//	udwNextTimerIrqNs -=  EdrvCyclicInstance_l.m_dwTxProcDur;
+    		//udwNextTimerIrqNs -=  EdrvCyclicInstance_l.m_dwTxProcDur;
     		EdrvCyclicInstance_l.m_fNextCycleValid = TRUE;
 
     	}
@@ -908,17 +908,21 @@ EdrvGetMacClock(&qwCurrMacTime);
     		{
     			EdrvSetGpio(3);
     		}
+    		else
+    		{
+    			EdrvClearGpio(3);
+    		}
 
        // if(bFirstPacket)
        // {
 
 
         	//bFirstPacket = FALSE;
-/*
-        	if(qwCurrMacTime > (ullLaunchTime) )
+
+    		  /*	if(qwCurrMacTime > (ullLaunchTime) )
         	{
         		printk("Invalid Cycle\n");
-        		udwNextTimerIrqNs -= ((qwCurrMacTime - ullLaunchTime) + EDRV_SHIFT);
+      		udwNextTimerIrqNs -= ((qwCurrMacTime - ullLaunchTime) + EDRV_SHIFT);
         		Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
         		        udwNextTimerIrqNs,
         		        EdrvCyclicCbTimerCycle,
@@ -939,7 +943,7 @@ EdrvGetMacClock(&qwCurrMacTime);
         	{
         		//printk("Correct time\n");
         	}
-*/
+
         	udwNextTimerIrqNs -= EdrvCyclicInstance_l.m_dwTxProcDur;
         	qwDiffNs = (ullLaunchTime - qwCurrMacTime);
 
@@ -960,7 +964,7 @@ EdrvGetMacClock(&qwCurrMacTime);
         		printk("Invalid Dif\n");
         	    udwNextTimerIrqNs -= (EDRV_SHIFT - qwDiffNs);
         	    EdrvSetGpio(2);
-        	/*    Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
+        	    Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
         	            		        udwNextTimerIrqNs,
         	            		        EdrvCyclicCbTimerCycle,
         	            		        0L,
@@ -975,9 +979,9 @@ EdrvGetMacClock(&qwCurrMacTime);
         	    EdrvCyclicInstance_l.m_ullNextCycleTime += (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL);
         	    Ret = kEplEdrvTxListNotFinishedYet;
         	    goto Exit;
-        	    */
-        	}
 
+        	}
+*/
         }
       //  else
        // {
@@ -1025,9 +1029,9 @@ EdrvGetMacClock(&qwCurrMacTime);
     EdrvCyclicInstance_l.m_ullNextCycleTime += (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL);
 //printk("Restart Timer\n");
    // printk("Irq:,%lld,",udwNextTimerIrqNs);
-  /*  Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
+ /*  Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
             		        udwNextTimerIrqNs,
- /           		        EdrvCyclicCbTimerCycle,
+           		        EdrvCyclicCbTimerCycle,
            		        0L,
            		        FALSE);
 
@@ -1036,7 +1040,7 @@ EdrvGetMacClock(&qwCurrMacTime);
          PRINTF("%s: EplTimerHighReskModifyTimerNs ret=0x%X\n", __func__, Ret);
           goto Exit;
     }
-    */
+*/
 #endif
 Exit:
 //printk("AfTx%d\n",EdrvCyclicInstance_l.m_uiCurTxBufferEntry);

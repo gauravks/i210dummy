@@ -91,7 +91,7 @@
 // const defines
 //---------------------------------------------------------------------------
 
-#define TIMER_COUNT           2            /* max 15 timers selectable */
+#define TIMER_COUNT           1            /* max 15 timers selectable */
 #define TIMER_MIN_VAL_SINGLE  5000         /* min 5us */
 #define TIMER_MIN_VAL_CYCLE   100000       /* min 100us */
 

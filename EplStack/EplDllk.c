@@ -5233,7 +5233,7 @@ tEplDllAsyncReqPriority Priority;
 tEplNmtState    NmtState;
 unsigned int    uiHandle = EPL_DLLK_TXFRAME_NMTREQ;
 TGT_DLLK_DECLARE_FLAGS
-
+//printk("%s\n",__FUNCTION__);
     TGT_DLLK_ENTER_CRITICAL_SECTION();
 
     NmtState = EplDllkInstance_g.m_NmtState;
@@ -5404,7 +5404,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplNmtState    NmtState;
 unsigned int    uiHandle = EPL_DLLK_TXFRAME_PREQ;
 TGT_DLLK_DECLARE_FLAGS
-
+printk("%s \n"__FUNCTION__);
     TGT_DLLK_ENTER_CRITICAL_SECTION();
 
     NmtState = EplDllkInstance_g.m_NmtState;
@@ -5489,7 +5489,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplNmtState    NmtState;
 unsigned int    uiHandle = EPL_DLLK_TXFRAME_SOA;
 TGT_DLLK_DECLARE_FLAGS
-
+//printk("%s\n",__FUNCTION__);
     UNUSED_PARAMETER(pTxBuffer_p);
 
     TGT_DLLK_ENTER_CRITICAL_SECTION();
@@ -5681,7 +5681,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplNmtState    NmtState;
 unsigned int    uiHandle = EPL_DLLK_TXFRAME_SOC;
 TGT_DLLK_DECLARE_FLAGS
-
+//printk("%s\n",__FUNCTION__);
     UNUSED_PARAMETER(pTxBuffer_p);
 
     TGT_DLLK_ENTER_CRITICAL_SECTION();
@@ -5946,7 +5946,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplFrame*      pTxFrame;
 
     pTxFrame = (tEplFrame *) pTxBuffer_p->m_pbBuffer;
-
+    printk("%s \n",__FUNCTION__);
     // update frame (NMT state, RD, RS, PR flags)
     AmiSetByteToLe(&pTxFrame->m_Data.m_Asnd.m_Payload.m_IdentResponse.m_le_bNmtStatus, (BYTE) NmtState_p);
     AmiSetByteToLe(&pTxFrame->m_Data.m_Asnd.m_Payload.m_IdentResponse.m_le_bFlag2, EplDllkInstance_g.m_bFlag2);
