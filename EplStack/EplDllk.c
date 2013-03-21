@@ -2611,7 +2611,7 @@ tEdrvTxBuffer*  pTxBuffer;
     {
         if (EplDllkInstance_g.m_DllConfigParam.m_uiSyncNodeId == EPL_C_ADR_SYNC_ON_SOC)
         {   // cyclic state is active, so preprocessing is necessary
-
+        	//printk("Sync\n");
             Ret = EplDllkProcessSync(NmtState_p);
         }
     }
@@ -3923,7 +3923,7 @@ tEplFrame*              pFrame;
 tEplFrameInfo           FrameInfo;
 tEplMsgType             MsgType;
 
-
+//printk("%s\n",__FUNCTION__);
 TGT_DLLK_DECLARE_FLAGS
 
     TGT_DLLK_ENTER_CRITICAL_SECTION();
@@ -4280,7 +4280,7 @@ unsigned int    uiNodeId;
 #if EPL_NMT_MAX_NODE_ID > 0
 tEplDllkNodeInfo*   pIntNodeInfo = NULL;
 #endif
-
+//printk("%s\n",__FUNCTION__);
     pFrame = pFrameInfo_p->m_pFrame;
 
     // PRes frame
@@ -5062,7 +5062,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplFrame*      pFrame;
 unsigned int    uiAsndServiceId;
 unsigned int    uiNodeId;
-
+//printk("%s\n",__FUNCTION__);
     UNUSED_PARAMETER(NmtState_p);
 #if EPL_DLL_PRES_CHAINING_CN == FALSE
     UNUSED_PARAMETER(pRxBuffer_p);
@@ -5946,7 +5946,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplFrame*      pTxFrame;
 
     pTxFrame = (tEplFrame *) pTxBuffer_p->m_pbBuffer;
-    printk("%s \n",__FUNCTION__);
+  //  printk("%s \n",__FUNCTION__);
     // update frame (NMT state, RD, RS, PR flags)
     AmiSetByteToLe(&pTxFrame->m_Data.m_Asnd.m_Payload.m_IdentResponse.m_le_bNmtStatus, (BYTE) NmtState_p);
     AmiSetByteToLe(&pTxFrame->m_Data.m_Asnd.m_Payload.m_IdentResponse.m_le_bFlag2, EplDllkInstance_g.m_bFlag2);
