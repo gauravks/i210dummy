@@ -516,7 +516,7 @@ typedef struct
     int                 m_iIrq;
     BYTE*               m_pbTxBuf;
     BOOL                m_afTxBufUsed[EDRV_MAX_TX_BUFFERS];
-    tEdrvPktBuff		*m_PktBuff;
+    //tEdrvPktBuff		*m_PktBuff;
     unsigned int		m_TxMaxQueue;
     unsigned int		m_RxMaxQueue;
     unsigned int		m_NumQVectors;
@@ -879,7 +879,7 @@ tEplKernel EdrvReleaseTxMsgBuffer     (tEdrvTxBuffer * pBuffer_p)
 }
 #ifdef QAV_MODE
 int
-EdrvGetMacClock( __u64	*pqwCurtime_p)
+EdrvGetTxTimeStamp( __u64	*pqwCurtime_p)
 {
 	__u64	t0, t1;
 	DWORD	timh, timl;
@@ -887,9 +887,32 @@ EdrvGetMacClock( __u64	*pqwCurtime_p)
 	if (NULL == pqwCurtime_p) return -1;
 
 	/* sample the timestamp bracketed by the RDTSC */
-	rdtscll(t0);
+	//rdtscll(t0);
+	//EDRV_REGDW_WRITE(EDRV_TSAUXC, EDRV_TSAUXC_SAMP_AUTO);
+	//rdtscll(t1);
+
+	timl = EDRV_REGDW_READ(0x0B618);
+	timh = EDRV_REGDW_READ(0x0B61C);
+
+	*pqwCurtime_p = (__u64)timh * 1000000000 + (__u64)timl;
+
+
+	return(0);
+}
+#endif
+#ifdef QAV_MODE
+int
+EdrvGetMacClock( __u64	*pqwCurtime_p)
+{
+//	__u64	t0, t1;
+	DWORD	timh, timl;
+
+	if (NULL == pqwCurtime_p) return -1;
+
+	/* sample the timestamp bracketed by the RDTSC */
+//	rdtscll(t0);
 	EDRV_REGDW_WRITE(EDRV_TSAUXC, EDRV_TSAUXC_SAMP_AUTO);
-	rdtscll(t1);
+//	rdtscll(t1);
 
 	timl = EDRV_REGDW_READ(EDRV_AUXSTMPL0);
 	timh = EDRV_REGDW_READ(EDRV_AUXSTMPH0);
@@ -1242,9 +1265,10 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 				//{
 					//TgtDbgSignalTracePoint(26);
 				//}
-								//Sec = (0xFFFFFFFF & pAdvTxDesc->m_sWb.m_le_qwTimeStamp);
-								//Lat = Sec - pTxBuffer->m_qwLaunchTime ;
-								//printk("(%lld - %lld) = %lld\n ",Sec,pTxBuffer->m_qwLaunchTime,Lat);
+							//	Sec = (0xFFFFFFFF & pAdvTxDesc->m_sWb.m_le_qwTimeStamp);
+							//	Lat = Sec - pTxBuffer->m_qwLaunchTime ;
+								//EdrvGetTxTimeStamp(&Lat);
+							//	printk("Type :%d (%lld - %lld) %lld\n ",pTxBuffer->m_pbBuffer[14],Sec,pTxBuffer->m_qwLaunchTime,Lat);
 								//printk("Type %d\n",pTxQueue->m_PktBuff[iIndex].m_VirtAddr[14]);
 				//dma_unmap_single(&EdrvInstance_l.m_pPciDev->dev,\
 								 pTxQueue->m_PktBuff[iIndex].m_DmaAddr,\
@@ -1272,10 +1296,10 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 									EDRV_COUNT_TX_FUN;
 								}
 								//break;
-								dma_unmap_single(&EdrvInstance_l.m_pPciDev->dev,\
-																 pTxQueue->m_PktBuff[iIndex].m_DmaAddr,\
-																 pTxQueue->m_PktBuff[iIndex].m_uilen, \
-																 DMA_TO_DEVICE);
+				dma_unmap_single(&EdrvInstance_l.m_pPciDev->dev,\
+								 pTxQueue->m_PktBuff[iIndex].m_DmaAddr,\
+								 pTxQueue->m_PktBuff[iIndex].m_uilen, \
+								 DMA_TO_DEVICE);
 			}
 			else
 			{
@@ -1649,7 +1673,10 @@ static void EdrvFreeTxQueues(void)
 	{
 		pTxQueue = EdrvInstance_l.m_pTxQueue[iIndex];
 
-
+		if(NULL == pTxQueue)
+		{
+			break;
+		}
 		if(NULL != pTxQueue->m_pbBuf)
 		{
 			kfree(pTxQueue->m_pbBuf);
@@ -1661,7 +1688,7 @@ static void EdrvFreeTxQueues(void)
 		}
 
 
-		if (NULL != pTxQueue->m_pDescVirt && NULL != pTxQueue)
+		if (NULL != pTxQueue->m_pDescVirt)
 		{
 			 dma_free_coherent(&EdrvInstance_l.m_pPciDev->dev,EDRV_TX_DESCS_SIZE,pTxQueue->m_pDescVirt,pTxQueue->m_DescDma);
 			 kfree(pTxQueue);
@@ -2523,6 +2550,10 @@ static void EdrvRemoveOne(struct pci_dev *pPciDev)
 	EdrvFreeTxQueues();
 	EdrvFreeRxQueues();
 
+	if(NULL != EdrvInstance_l.m_pbTxBuf )
+	{
+		kfree(EdrvInstance_l.m_pbTxBuf);
+	}
 	// Power down Phy
 	wReg = EdrvMdicRead(PHY_I210_COPPER_SPEC);
 	wReg |= PHY_I210_CS_POWER_DOWN;

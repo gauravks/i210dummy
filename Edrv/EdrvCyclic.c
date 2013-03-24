@@ -162,7 +162,9 @@ void  PUBLIC  TgtDbgSignalTracePoint (BYTE bTracePointNumber_p);
 
 static tEdrvCyclicInstance EdrvCyclicInstance_l;
 
-
+#ifdef EDRVI210
+unsigned long long	ullLaunchTime;
+#endif
 
 
 /***************************************************************************/
@@ -863,7 +865,7 @@ unsigned long long	qwCurrMacTime;
 __u64				udwNextTimerIrqNs = (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL)  ;
 __u64				qwDiffNs,qwCycleMin,qwCycleMax;
 
-//EdrvGetMacClock(&qwCurrMacTime);
+EdrvGetMacClock(&qwCurrMacTime);
 //printk("Tx%d\n",EdrvCyclicInstance_l.m_uiCurTxBufferEntry);
 //printk("Tx:%lld\n",qwCurrMacTime);
 //printk("Process\n");
@@ -905,7 +907,7 @@ __u64				qwDiffNs,qwCycleMin,qwCycleMax;
     	else
     	{
     		ullLaunchTime = EdrvCyclicInstance_l.m_ullNextCycleTime;
-
+    		//printk("Lt: %lld\n",ullLaunchTime);
     		if(qwCurrMacTime > (ullLaunchTime) )
     		{
     			EdrvSetGpio(3);
@@ -1028,7 +1030,7 @@ __u64				qwDiffNs,qwCycleMin,qwCycleMax;
 				printk("Send Failes %x",Ret);
 				goto Exit;
 			}
-			pTxBuffer->m_qwLaunchTime = 0;
+			//pTxBuffer->m_qwLaunchTime = 0;
 
 			EdrvCyclicInstance_l.m_uiCurTxBufferEntry++;
 
