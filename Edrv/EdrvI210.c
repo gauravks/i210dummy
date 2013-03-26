@@ -78,6 +78,7 @@
 
 #define PROMICIOUS_MODE
 #define	QAV_MODE
+//#define DISABLE_AUTONEG
 #define CONFIG_BAR  0
 #define DRIVER_NAME "epl"
 
@@ -132,7 +133,7 @@
 
 #define EDRV_SWSM_SMBI           0x00000001
 #define EDRV_SWSM_SWESMBI        0x00000002  // Software EEPROM Semaphore Bit
-#define EDRV_TIPG_DEF            0x00601008
+#define EDRV_TIPG_DEF            0x00702008
 #define EDRV_EECD_AUTO_RD		 0x00000200
 #define EDRV_SWFW_PHY0_SM	     0x02
 // Tx Registers
@@ -285,12 +286,13 @@
 #define EDRV_TDESC_DTYP_ADV 			(3 << 20) // Advance Tx Descriptor
 
 #define EDRV_TCTL_CT		            0x000000F0
+#define EDRV_TCTL_SWFLSH				0x04000000
 #define EDRV_TCTL_CLEAR_CT				0x00000ff0
 #define EDRV_TCTL_EN		            0x00000002
 #define EDRV_TCTL_PSP		            0x00000008
 #define EDRV_TCTL_RTLC		            0x01000000
 #define EDRV_TCTL_EXT_COLD_CLEAR        0x000FFC00
-#define EDRV_TCTL_EXT_COLD              0x0000FC00 // default value as per 802.3 spec
+#define EDRV_TCTL_EXT_COLD              0x0003F000 // default value as per 802.3 spec
 #define EDRV_TXDCTL_PTHRESH             0
 #define EDRV_TXDCTL_HTHRESH             0
 #define EDRV_TXDCTL_WTHRESH             0
@@ -331,6 +333,7 @@
 #define EDRV_RCTL_LPE			(1 << 5 ) // Long packet Reception enable
 #define EDRV_RCTL_LBM_MAC		(1 << 6 ) // Loop back mode
 #define EDRV_RCTL_LBM_CLEAR		(3 << 6 )
+#define EDRV_RCTL_SWFLUSH 		(1 << 26)
 #define EDRV_RCTL_MO_SHIFT		12
 #define EDRV_RCTL_MO_36_47		(0 << 12) // Multicast Offset bit[47:36]
 #define EDRV_RCTL_MO_35_46		(1 << 12) // Multicast Offset bit[46:35]
@@ -956,6 +959,7 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 	if ((uiBufferNumber >= EDRV_MAX_TX_BUFFERS)
 	        || (EdrvInstance_l.m_afTxBufUsed[uiBufferNumber] == FALSE))
 	{
+			printk("No Buff\n");
 	        Ret = kEplEdrvBufNotExisting;
 
 	        goto Exit;
@@ -991,10 +995,10 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 	//pTxBuffer_p->m_qwLaunchTime = qwTime;
 	//wmb();
 	//printk("Qt: %lld\n",qwTime);
-	//do_div(qwTime,32);
+	do_div(qwTime,32);
 
-	//pTtxDesc->m_CtxtDesc.m_dwLaunchTime = qwTime;
-	pTtxDesc->m_CtxtDesc.m_dwLaunchTime = (qwTime >> 5);
+	pTtxDesc->m_CtxtDesc.m_dwLaunchTime = qwTime;
+	//pTtxDesc->m_CtxtDesc.m_dwLaunchTime = (qwTime >> 5);
 
 	pTtxDesc->m_CtxtDesc.m_dwTucmdType = (EDRV_TDESC_CMD_DEXT | EDRV_TDESC_DTYP_CTXT) ;
 
@@ -1009,10 +1013,10 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 	    goto Exit;
 	}
 
-	//if(pTxBuffer_p->m_pbBuffer[14] == 1)
-	//{
-		//TgtDbgSignalTracePoint(25);
-	//}
+//	if(pTxBuffer_p->m_pbBuffer[20] == 1)
+//	{
+//		TgtDbgSignalTracePoint(25);
+//	}
 	pTxQueue->m_apTxBuffer[iIndex] = pTxBuffer_p;
 	EDRV_COUNT_SEND;
 	pTxQueue->m_PktBuff[iIndex].m_DmaAddr = TxDma;
@@ -1058,7 +1062,7 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 
 			if(pTxBuffer_p->m_pbBuffer[14] == 1)
 				{
-					TgtDbgSignalTracePoint(25);
+					//TgtDbgSignalTracePoint(25);
 				}
 			pTxQueue->m_apTxBuffer[iIndex] = pTxBuffer_p;
 			EDRV_COUNT_SEND;
@@ -1225,6 +1229,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	{
 		EDRV_COUNT_TX;
 		//printk("Tx \n");
+
 		while(pTxQueue->m_iNextWb != pTxQueue->m_iNextDesc)
 		{
 			#ifdef QAV_MODE
@@ -1261,10 +1266,10 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 				pTxBuffer = pTxQueue->m_apTxBuffer[iIndex];
 				pTxQueue->m_apTxBuffer[iIndex] = NULL;
 
-				//if(pTxBuffer->m_pbBuffer[14] == 1)
-				//{
-					//TgtDbgSignalTracePoint(26);
-				//}
+			//	if(pTxBuffer->m_pbBuffer[20] == 1)
+			//	{
+			//		TgtDbgSignalTracePoint(26);
+			//	}
 							//	Sec = (0xFFFFFFFF & pAdvTxDesc->m_sWb.m_le_qwTimeStamp);
 							//	Lat = Sec - pTxBuffer->m_qwLaunchTime ;
 								//EdrvGetTxTimeStamp(&Lat);
@@ -2158,6 +2163,9 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	tEdrvQueue 		*pQueue;
 	tEdrvQVector 	*pVector;
 	DWORD			dwReg;
+#ifdef DISABLE_AUTONEG
+	WORD			wReg;
+#endif
 	INT             iIndex;
 	struct timespec sSysTime;
 	if (EdrvInstance_l.m_pPciDev != NULL)
@@ -2259,7 +2267,6 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 
     dwReg = 0;
     dwReg = EDRV_REGDW_READ(EDRV_CTRL_REG);
-
     dwReg |= (EDRV_CTRL_DEV_RST);
  	EDRV_REGDW_WRITE(EDRV_CTRL_REG,dwReg);
  	msleep(5);
@@ -2299,6 +2306,16 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	//1. Acquire Phy Sw semaphore for PHY
 	EdrvAcquireSwfwSync(EDRV_SWFW_PHY0_SM);
 
+#ifdef DISABLE_AUTONEG
+	//EdrvAcquireSwfwSync(EDRV_SWFW_PHY0_SM);
+	wReg = EdrvMdicRead(PHY_CONTROL_REG_OFFSET);
+
+	wReg &= ~(0x1000 | 0x0040);
+	wReg |= PHY_LINK_SPEED_100;
+	EdrvMdicWrite(PHY_CONTROL_REG_OFFSET,wReg);
+
+#endif
+
 	//2. Set Phy reset bit in CTRL register
 	dwReg = EDRV_REGDW_READ(EDRV_CTRL_REG);
 	dwReg |= (EDRV_CTRL_PHY_RST);
@@ -2318,6 +2335,8 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	dwReg = EDRV_REGDW_READ(EDRV_CTRL_EXTN_REG);
 	dwReg |= EDRV_CTRL_EXTN_DRV_LOAD;
 	EDRV_REGDW_WRITE(EDRV_CTRL_EXTN_REG,dwReg);
+
+
 
 	// Set the Queue Parameters
 	EdrvInstance_l.m_TxMaxQueue = EDRV_MAX_TX_QUEUES;
@@ -2341,7 +2360,7 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 
 	//TODO:CHeck this
 	// EDRV_REGDW_WRITE(EDRV_EEER_REG,0);
-
+	EDRV_REGDW_WRITE(EDRV_TIPG_REG,EDRV_TIPG_DEF);
 	iResult = pci_enable_msi(pPciDev);
 	if (iResult != 0)
 	{
@@ -2407,8 +2426,8 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	 EDRV_REGDW_WRITE(EDRV_TXDCTL(0),0); // Disable Q0 before proceeding
 	 dwReg = 0;
 	 dwReg = EDRV_REGDW_READ(EDRV_TCTL_REG);
-	 dwReg &= (~EDRV_TCTL_CLEAR_CT);
-	 dwReg |= (EDRV_TCTL_CT | EDRV_TCTL_PSP);
+	 dwReg &= ~(EDRV_TCTL_CLEAR_CT | EDRV_TCTL_RTLC);
+	 dwReg |= (/*EDRV_TCTL_CT  |*/ EDRV_TCTL_PSP);
 	 EDRV_REGDW_WRITE(EDRV_TCTL_REG,dwReg);
 
 	 // Set the default collision threshold
@@ -2496,6 +2515,12 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	    goto Exit;
 	 }
 	// EdrvClearGpio(1);
+#ifdef DISABLE_AUTONEG
+	 EdrvAcquireSwfwSync(EDRV_SWFW_PHY0_SM);
+	 wReg = EdrvMdicRead(PHY_CONTROL_REG_OFFSET);
+	 printk("Phy Status %x\n",wReg);
+	 EdrvReleaseSwfwSync(EDRV_SWFW_PHY0_SM);
+#endif
 	 goto Exit;
 
 ExitQueue:
@@ -2537,12 +2562,27 @@ static void EdrvRemoveOne(struct pci_dev *pPciDev)
 	// Disable Tx
 	dwReg = EDRV_REGDW_READ(EDRV_TCTL_REG);
 	dwReg &= ~EDRV_TCTL_EN;
-	EDRV_REGDW_READ(EDRV_STATUS_REG);
+	dwReg |= EDRV_TCTL_SWFLSH;
+	EDRV_REGDW_WRITE(EDRV_TCTL_REG,dwReg);
 
 	//Disable Rx
 	dwReg = EDRV_REGDW_READ(EDRV_RCTL_REG);
 	dwReg &= ~EDRV_RCTL_EN;
+	dwReg |= EDRV_RCTL_SWFLUSH;
+	EDRV_REGDW_WRITE(EDRV_RCTL_REG,dwReg);
+
 	EDRV_REGDW_READ(EDRV_STATUS_REG);
+
+	usleep_range(10000, 20000);
+
+	dwReg = EDRV_REGDW_READ(EDRV_TCTL_REG);
+	dwReg &= ~EDRV_TCTL_SWFLSH;
+	EDRV_REGDW_WRITE(EDRV_TCTL_REG,dwReg);
+
+	//Disable Rx
+	dwReg = EDRV_REGDW_READ(EDRV_RCTL_REG);
+	dwReg &= ~EDRV_RCTL_SWFLUSH;
+	EDRV_REGDW_WRITE(EDRV_RCTL_REG,dwReg);
 
 	EdrvFreeTxBuffers();
 	EdrvFreeRxBuffers();

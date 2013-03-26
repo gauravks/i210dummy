@@ -144,6 +144,8 @@ static unsigned int uiCycleLen_g = 0;
 static unsigned int uiCurCycleLen_g = 0;
 static char *pLogFile_g = NULL;
 
+
+
 /* process image stuff */
 #include "xap.h"
 
@@ -239,7 +241,6 @@ static void printlog(char *fmt, ...)
     vfprintf(stderr, fmt, arglist);
     va_end(arglist);
 }
-
 
 //=========================================================================//
 //                                                                         //
@@ -1064,6 +1065,7 @@ void *powerlinkSyncThread(void * arg __attribute__((unused)))
 
 
 #endif
+
 
 // EOF
 

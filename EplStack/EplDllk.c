@@ -2647,7 +2647,7 @@ tEdrvTxBuffer*  pTxBuffer;
 tEplFrameInfo   FrameInfo;
 unsigned int    uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetCycle ^ 1;
 
-TgtDbgSignalTracePoint(24);
+//TgtDbgSignalTracePoint(24);
     if (EplDllkInstance_g.m_pfnCbSync != NULL)
     {
         Ret = EplDllkInstance_g.m_pfnCbSync();

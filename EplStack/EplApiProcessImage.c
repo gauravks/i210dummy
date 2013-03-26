@@ -80,6 +80,7 @@
 #include <linux/sched.h>
 #include <linux/highmem.h>
 #include <linux/version.h>
+#include <linux/semaphore.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
 #include <linux/semaphore.h>
 #else
@@ -911,6 +912,7 @@ unsigned int    uiNrOfPages;
                 uiNrOfPages, fOut_p, 0, ppPage_p,
                 NULL);
         up_read(&current->mm->mmap_sem);
+
         if (iRet != uiNrOfPages)
         {
             PRINTF("%s: get_user_pages(%p, %u, %d, %p) returned %d\n",

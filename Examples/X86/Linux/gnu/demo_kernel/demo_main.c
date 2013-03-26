@@ -68,13 +68,18 @@
 #include <linux/slab.h>
 #include <linux/pci.h>
 #include <linux/proc_fs.h>
+#include <linux/delay.h>
 
 
 #include "Epl.h"
 #include "proc_fs.h"
 #include "PosixFileLinuxKernel.h"
 
+#define TTTX_TEST
 
+#ifdef TTTX_TEST
+    #include "edrv.h"
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     // remove ("make invisible") obsolete symbols for kernel versions 2.6
     // and higher
@@ -170,6 +175,11 @@ static uint uiCycleLen_g = 0;
 #else
 static uint uiCycleLen_g = CYCLE_LEN;
 #endif
+#ifdef TTTX_TEST
+unsigned char abSocData[60] = { 0x01, 0x11, 0x1e, 0x00, 0x00, 0x01, 0x00, 0x03,  0xc0, 0xa8, 0x64, 0xf0, 0x88, 0xab, 0x01, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+tEdrvTxBuffer pBuffer_p[50];
+#endif
 
 /*----------------------------------------------------------------------------*/
 /* process image stuff */
@@ -204,7 +214,7 @@ module_param_named(nodeid, uiNodeId_g, uint, 0);
 MODULE_PARM_DESC(nodeid, "Local Node-ID of this POWERLINK node (0x01 - 0xEF -> CNs, 0xF0 -> MN");
 
 module_param_named(cyclelen, uiCycleLen_g, uint, 0);
-MODULE_PARM_DESC(cyclelen, "Cyclelength in [µs] (it is stored in object 0x1006)");
+MODULE_PARM_DESC(cyclelen, "Cyclelength in [ï¿½s] (it is stored in object 0x1006)");
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_CFM)) != 0)
 static char* pszCdcFilename_g = EPL_OBD_DEF_CONCISEDCF_FILENAME;
@@ -231,6 +241,11 @@ tEplKernel PUBLIC AppCbEvent(
     void GENERIC*           pUserArg_p);
 
 tEplKernel PUBLIC AppCbSync(void);
+
+#ifdef TTTX_TEST
+static tEdrvReleaseRxBuffer CbFrameReceived(tEdrvRxBuffer * pRxBuffer_p);
+static void CbTransmittedFrame(tEdrvTxBuffer * pTxBuffer_p);
+#endif
 
 static int  __init  EplLinInit (void);
 static void __exit  EplLinExit (void);
@@ -272,7 +287,14 @@ static tEplApiInitParam EplApiInitParam = {0};
 char*               sHostname = HOSTNAME;
 BOOL                fApiInit = FALSE;
 BOOL                fLinProcInit =FALSE;
+#ifdef TTTX_TEST
+    tEdrvInitParam  pEdrvInitParam_p;
+    INT iIndex;
+    unsigned long long int	qwLaunch;
+    INT iCount = 0;
+#endif
 
+#ifndef  TTTX_TEST
     atomic_set(&AtomicShutdown_g, TRUE);
 
     // open character device from debugfs to disable tracing when necessary
@@ -387,8 +409,59 @@ BOOL                fLinProcInit =FALSE;
     // start the NMT state machine
     EplRet = EplApiExecNmtCommand(kEplNmtEventSwReset);
     atomic_set(&AtomicShutdown_g, FALSE);
+#else
 
+    pEdrvInitParam_p.m_pfnRxHandler = CbFrameReceived;
+    memcpy(pEdrvInitParam_p.m_abMyMacAddr,abMacAddr,6);
+    EplRet = EdrvInit(&pEdrvInitParam_p);
+    if(EplRet != kEplSuccessful)
+    {
+    	printk("EdrvInit Failed\n");
+    	goto Exit;
+    }
+    for(iIndex = 0 ;iIndex < 30; iIndex++)
+    {
+    	pBuffer_p[iIndex].m_uiMaxBufferLen = 60;
+    	EplRet = EdrvAllocTxMsgBuffer(&pBuffer_p[iIndex]);
+    	if(EplRet != kEplSuccessful)
+    	{
+    	   	printk("EdrvAlloc Failed\n");
+    	   	goto Exit;
+    	}
+    }
+#define PACKET_COUNT	10
+#define	COUNT			100
+    msleep(100);
+    EdrvGetMacClock(&qwLaunch);
+    while (iCount < COUNT)
+    {
+    	printk("Enter\n");
+
+    	for(iIndex = 0;iIndex < PACKET_COUNT;iIndex++)
+    	{
+    		qwLaunch = qwLaunch + 100000ULL;
+    		//printk("%lld\n",qwLaunch);
+    		pBuffer_p[iIndex].m_pfnTxHandler = CbTransmittedFrame;
+    		if(pBuffer_p[iIndex].m_pbBuffer == NULL)
+    		{
+    			printk("No BUffer\n");
+    			break;
+    		}
+    		memcpy(pBuffer_p[iIndex].m_pbBuffer,abSocData,60);
+    		pBuffer_p[iIndex].m_uiTxMsgLen = 60;
+    		pBuffer_p[iIndex].m_qwLaunchTime = qwLaunch;
+    		EdrvSendTxMsg(&pBuffer_p[iIndex]);
+
+    	}
+    	udelay(70);
+
+    	iCount++;
+    }
+
+
+#endif
 Exit:
+#ifndef TTTX_TEST
     PRINTF("EplLinInit(): returns 0x%X\n", EplRet);
     if (EplRet != kEplSuccessful)
     {
@@ -407,6 +480,9 @@ Exit:
     {
         return 0;
     }
+#else
+    return 0;
+#endif
 }
 
 //---------------------------------------------------------------------------
@@ -425,7 +501,7 @@ Exit:
 static  void  __exit  EplLinExit (void)
 {
 tEplKernel          EplRet;
-
+#ifndef TTTX_TEST
     // halt the NMT state machine
     // so the processing of POWERLINK frames stops
     EplRet = EplApiExecNmtCommand(kEplNmtEventSwitchOff);
@@ -453,6 +529,10 @@ tEplKernel          EplRet;
     {
         close(hAppFdTracingEnabled_g);
     }
+#else
+    EdrvShutdown();
+#endif
+
 }
 
 //=========================================================================//
@@ -663,10 +743,10 @@ tEplKernel          EplRet = kEplSuccessful;
 
                 case kEplNmtNodeEventError:
                 {
-                    PRINTF("%s (Node=0x%X): Error = %s (0x%.4X)\n", __func__,
-                            pEventArg_p->m_Node.m_uiNodeId,
-                            EplGetEmergErrCodeStr(pEventArg_p->m_Node.m_wErrorCode),
-                            pEventArg_p->m_Node.m_wErrorCode);
+                   // PRINTF("%s (Node=0x%X): Error = %s (0x%.4X)\n", __func__,
+                   //         pEventArg_p->m_Node.m_uiNodeId,
+                    //        EplGetEmergErrCodeStr(pEventArg_p->m_Node.m_wErrorCode),
+                    //        pEventArg_p->m_Node.m_wErrorCode);
                     break;
                 }
 
@@ -835,5 +915,14 @@ tEplKernel          EplRet = kEplSuccessful;
 
     return EplRet;
 }
-
+static tEdrvReleaseRxBuffer CbFrameReceived(tEdrvRxBuffer * pRxBuffer_p)
+{
+	printk("Frame Recieved\n");
+	return 0;
+}
+static void CbTransmittedFrame(tEdrvTxBuffer * pTxBuffer_p)
+{
+	printk("frame Transmitted %d\n",pTxBuffer_p->m_BufferNumber);
+	//EdrvReleaseTxMsgBuffer(pTxBuffer_p);
+}
 // EOF
