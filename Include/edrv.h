@@ -73,7 +73,7 @@
 
 #include "EplInc.h"
 #include "EplFrame.h"
-
+#include "EplTimer.h"
 //---------------------------------------------------------------------------
 // const defines
 //---------------------------------------------------------------------------
@@ -136,6 +136,9 @@ typedef tEdrvReleaseRxBuffer (*tEdrvRxHandler) (tEdrvRxBuffer * pRxBuffer_p);
 typedef void (*tEdrvTxHandler) (tEdrvTxBuffer * pTxBuffer_p);
 typedef tEplKernel (* tEdrvCyclicCbSync) (void);
 typedef tEplKernel (* tEdrvCyclicCbError) (tEplKernel ErrorCode_p, tEdrvTxBuffer * pTxBuffer_p);
+
+typedef void (PUBLIC * tEplHighResCallback) (
+		tEplTimerHdl* pTimerHdl_p);
 
 
 // position of a buffer in an ethernet-frame
@@ -266,9 +269,15 @@ tEplKernel EdrvChangeFilter(tEdrvFilter*    pFilter_p,
 
 int
 EdrvGetMacClock( __u64	*pqwCurtime_p);
+//TODO: Test functions for I210 to be removed during cleanup
 void EdrvClearGpio(INT iPinNo);
 void EdrvSetGpio(INT iPinNo);
 
+void EdrvSetCyclicFrequency(DWORD dwOffset);
+tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p);
+tEplKernel EdrvStopTimer(tEplTimerHdl* pTimerHdl_p);
+tEplKernel EdrvEnableTimer(tEplTimerHdl* pTimerHdl_p);
+tEplKernel EdrvRegisterHighResCallback(tEplHighResCallback pfnHighResCb_p);
 int EdrvGetDiagnostics(char* pszBuffer_p, int iSize_p);
 
 // EdrvCyclic module

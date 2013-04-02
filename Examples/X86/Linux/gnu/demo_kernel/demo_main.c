@@ -75,7 +75,7 @@
 #include "proc_fs.h"
 #include "PosixFileLinuxKernel.h"
 
-#define TTTX_TEST
+//#define TTTX_TEST
 
 #ifdef TTTX_TEST
     #include "edrv.h"
@@ -915,6 +915,7 @@ tEplKernel          EplRet = kEplSuccessful;
 
     return EplRet;
 }
+#ifdef TTTX_TEST
 static tEdrvReleaseRxBuffer CbFrameReceived(tEdrvRxBuffer * pRxBuffer_p)
 {
 	printk("Frame Recieved\n");
@@ -925,4 +926,5 @@ static void CbTransmittedFrame(tEdrvTxBuffer * pTxBuffer_p)
 	printk("frame Transmitted %d\n",pTxBuffer_p->m_BufferNumber);
 	//EdrvReleaseTxMsgBuffer(pTxBuffer_p);
 }
+#endif
 // EOF

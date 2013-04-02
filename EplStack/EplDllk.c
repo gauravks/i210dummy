@@ -1599,6 +1599,7 @@ tEplDllkNodeInfo*   pIntNodeInfo;
         goto Exit;
     }
     // mark Tx buffer as empty
+    printk("Handle:%d\n",uiHandle);
     EplDllkInstance_g.m_pTxBuffer[uiHandle].m_uiTxMsgLen = EPL_DLLK_BUFLEN_EMPTY;
     EplDllkInstance_g.m_pTxBuffer[uiHandle].m_pfnTxHandler = EplDllkCbTransmittedNmtReq;
     uiHandle++;
@@ -2646,7 +2647,7 @@ tEplFrame*      pTxFrame;
 tEdrvTxBuffer*  pTxBuffer;
 tEplFrameInfo   FrameInfo;
 unsigned int    uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetCycle ^ 1;
-
+//printk("%s\n",__FUNCTION__);
 //TgtDbgSignalTracePoint(24);
     if (EplDllkInstance_g.m_pfnCbSync != NULL)
     {
@@ -7363,7 +7364,7 @@ static tEplKernel EplDllkUpdateFrameSoa(tEdrvTxBuffer* pTxBuffer_p, tEplNmtState
 tEplKernel          Ret = kEplSuccessful;
 tEplFrame*          pTxFrame;
 tEplDllkNodeInfo*   pNodeInfo;
-
+//printk("%s\n",__FUNCTION__);
     pTxFrame = (tEplFrame *) pTxBuffer_p->m_pbBuffer;
 
     if (fEnableInvitation_p != FALSE)

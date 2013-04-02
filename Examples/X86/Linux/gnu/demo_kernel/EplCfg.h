@@ -92,6 +92,7 @@
 
 // use no FIFOs, make direct calls
 //#define EPL_USE_SHAREDBUFF   FALSE
+//#define EPL_EVENT_USE_KERNEL_QUEUE          FALSE
 
 #ifndef BENCHMARK_MODULES
 #define BENCHMARK_MODULES       0 //0xEE800042L

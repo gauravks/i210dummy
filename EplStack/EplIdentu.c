@@ -356,7 +356,7 @@ tEplKernel PUBLIC EplIdentuRequestIdentResponse(
                                     tEplIdentuCbResponse pfnCbResponse_p)
 {
 tEplKernel  Ret;
-
+//printk("%s\n",__FUNCTION__);
     Ret = kEplSuccessful;
 
 #if (((EPL_MODULE_INTEGRATION) & (EPL_MODULE_NMT_MN)) != 0)

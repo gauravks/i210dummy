@@ -367,6 +367,7 @@ tEplKernel          Ret;
         EPL_MEMCPY(&TimerEventArg.m_Arg, &pTimerEntry->m_TimerArg.m_Arg, sizeof (TimerEventArg.m_Arg));
     
         EplEvent.m_EventSink = pTimerEntry->m_TimerArg.m_EventSink;
+        printk("1: %s \n",__FUNCTION__);
         EplEvent.m_EventType = kEplEventTypeTimer;
         EPL_MEMSET(&EplEvent.m_NetTime, 0x00, sizeof(tEplNetTime));
         EplEvent.m_pArg = &TimerEventArg;

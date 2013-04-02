@@ -54,6 +54,7 @@
 #include "EplInc.h"
 #include "edrv.h"
 
+
 #include <linux/pci.h>
 #include <linux/interrupt.h>
 #include <linux/module.h>
@@ -147,10 +148,30 @@
 #define EDRV_LAUNCH_OSO			 0x03578
 #define EDRV_TQAVARBCTRL_REG	 0x03574 // TODO :Verify this register
 #define EDRV_TXPBSIZE_DEF		 0x04104208 // 8 Kb TQ0, 8Kb TQ1, 4 Kb TQ2, 4Kb TQ3 and 4 Kb Os2Bmc
-#define EDRV_TSAUXC_SAMP_AUTO	 0x00000008
-#define EDRV_TSAUXC				 0x0B640
-#define EDRV_AUXSTMPL0 			 0x0B65C /* Auxiliary Time Stamp 0 Reg - Low */
-#define EDRV_AUXSTMPH0 			 0x0B660 /* Auxiliary Time Stamp 0 Reg - Low */
+
+#define EDRV_TSAUXC_SAMP_AUTO		0x00000008
+#define EDRV_TSAUXC					0x0B640
+#define EDRV_AUXSTMPL0 			0x0B65C /* Auxiliary Time Stamp 0 Reg - Low */
+#define EDRV_AUXSTMPH0 			0x0B660 /* Auxiliary Time Stamp 0 Reg - Low */
+#define EDRV_TSAUXC_EN_TT0		(1 << 0)
+#define EDRV_TSAUXC_EN_TT1		(1 << 1)
+#define EDRV_TSAUXC_EN_CLK0 	(1 << 2)
+#define EDRV_TSAUXC_ST0			(1 << 4)
+#define EDRV_TRGTTIML0 			0x0B644
+#define EDRV_TRGTTIMH0 			0x0B648
+#define EDRV_TSSDP 				0x0003C
+#define EDRV_TSSDP_TS_SDP3_SEL_CLK0 	(2 << 15)
+#define EDRV_TSSDP_TS_SDP3_SEL_CLK1		(3 << 15)
+#define EDRV_TSSDP_TS_SDP3_EN 	(1 << 17)
+#define EDRV_TSSDP_TS_SDP0_SEL_CLK0 	(2 << 6)
+#define EDRV_TSSDP_TS_SDP0_EN 	(1 << 8)
+
+#define EDRV_FREQOUT0 			0x0B654
+#define EDRV_TSIM 				0x0B674
+#define EDRV_TSICR 				0x0B66C
+#define	EDRV_TSIM_TT0 			(1 << 3)
+#define	EDRV_TSIM_TT1 			(1 << 4)
+
 
 #define EDRV_TDBAL(n)            ((n < 4) ? (0x0E000 + 0x40 * n) :\
                                  (0x0E000 + 0x40 * (n - 4)))
@@ -212,6 +233,7 @@
 #define EDRV_INTR_GPIE_PBA		   (1 << 31)
 #define EDRV_INTR_ICR_TXDW		   0x00000001
 #define EDRV_INTR_ICR_RXDW		 (1 << 7 )
+#define EDRV_INTR_ICR_TIME_SYNC	 (1 << 19)
 #define	EDRV_INTR_ICR_RXDMT0	 (1 << 4 )
 #define EDRV_INTR_ICR_RXMISS		(1 << 6)
 #define EDRV_INTR_ICR_FER		 (1 << 22)
@@ -227,7 +249,8 @@
                                | EDRV_INTR_ICR_RXDW \
                                | EDRV_INTR_ICR_RXDMT0 \
                                | EDRV_INTR_ICR_RXMISS \
-                               | EDRV_INTR_ICR_FER)
+                               | EDRV_INTR_ICR_FER \
+                               | EDRV_INTR_ICR_TIME_SYNC)
 // Phy Defines
 #define PHY_CONTROL_REG_OFFSET          0x00
 #define PHY_STATUS_REG_OFFSET           0x01
@@ -323,6 +346,8 @@
 #define EDRV_RDESC_STATUS_EOP 			(1 << 1)
 #define EDRV_RDESC_STATUS_DD			(1 << 0)
 #define EDRV_RDESC_ERRORS_RXE			(1 << 31)
+
+
 
 
 //Rx Register defines
@@ -507,7 +532,7 @@ typedef struct
 {
     struct pci_dev      *m_pPciDev;      // pointer to PCI device structure
     void                *m_pIoAddr;      // pointer to register space of Ethernet controller
-    //unsigned char __iomem        *m_pbTxBuf[EDRV_MAX_TX_QUEUES];      // pointer to Tx buffer
+   // unsigned char __iomem        *m_pbTxBuf[EDRV_MAX_TX_QUEUES];      // pointer to Tx buffer
    // unsigned char __iomem        *m_pbRxBuf[EDRV_MAX_RX_QUEUES];      // pointer to Tx buffer
     dma_addr_t          m_TxBuffDma;
     tEdrvQueue *		m_pTxQueue[EDRV_MAX_TX_QUEUES];
@@ -527,6 +552,8 @@ typedef struct
 #ifdef USE_MULTIPLE_QUEUE
     tEdrvQVector *		m_pQvector[EDRV_MAX_QUEUE_VECTOR];
 #endif
+    tEplTimerHdl		m_TimerHdl;
+    tEplHighResCallback m_HighResTimerCb;
     tEdrvInitParam      m_InitParam;
 }tEdrvInstance;
 
@@ -1160,6 +1187,12 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	}
 	//EDRV_REGDW_WRITE(EDRV_INTR_READ_REG,dwStatus);
 
+
+
+	if(dwStatus & EDRV_INTR_ICR_TIME_SYNC)
+	{
+		EdrvInstance_l.m_HighResTimerCb(EdrvInstance_l.m_TimerHdl);
+	}
 	//Process Rx
 	if ((dwStatus & ( EDRV_INTR_ICR_RXDW | EDRV_INTR_ICR_RXDMT0)) != 0)
 	{
@@ -2492,7 +2525,7 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 
 	 // enable interrupts
 
-	 EDRV_REGDW_WRITE(EDRV_INTR_MASK_SET_READ,(EDRV_INTR_ICR_TXDW | EDRV_INTR_ICR_RXDW));
+	 EDRV_REGDW_WRITE(EDRV_INTR_MASK_SET_READ,(EDRV_INTR_ICR_TXDW | EDRV_INTR_ICR_RXDW | EDRV_INTR_ICR_TIME_SYNC ));
 	 dwReg = EDRV_REGDW_READ(EDRV_EXT_INTR_MASK_SET);
 	 dwReg |= /*0x8000001F;*/(EDRV_EIMC_OTHR_EN ); // TODO:Test this
 	 EDRV_REGDW_WRITE(EDRV_EXT_INTR_MASK_SET,dwReg);
@@ -2639,3 +2672,102 @@ static void EdrvRemoveOne(struct pci_dev *pPciDev)
 Exit:
     return;
 }
+void EdrvSetCyclicFrequency(DWORD dwOffset)
+{
+	EDRV_REGDW_WRITE(EDRV_FREQOUT0,dwOffset);
+}
+tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p)
+{
+	tEplKernel EplRet =  kEplSuccessful;
+	unsigned int dwReg;
+
+	if(NULL == pTimerHdl_p)
+	{
+		EplRet = kEplTimerNoTimerCreated;
+		goto Exit;
+	}
+
+	EdrvInstance_l.m_TimerHdl = *pTimerHdl_p;
+
+	dwReg = 0;
+	dwReg |= ( EDRV_TSSDP_TS_SDP0_SEL_CLK0 | EDRV_TSSDP_TS_SDP0_EN);
+	EDRV_REGDW_WRITE(EDRV_TSSDP,dwReg);
+
+	dwReg = 0;
+	dwReg = EDRV_REGDW_READ(EDRV_CTRL_REG);
+	dwReg |= SDP0_SET_DIR_OUT;
+	EDRV_REGDW_WRITE(EDRV_CTRL_REG,dwReg);
+
+	dwReg = 0;
+	dwReg = EDRV_REGDW_READ(EDRV_TSAUXC);
+	dwReg |= (EDRV_TSAUXC_EN_CLK0 | EDRV_TSAUXC_EN_TT0);
+	EDRV_REGDW_WRITE(EDRV_TSAUXC,dwReg);
+
+	dwReg = 0;
+	dwReg = EDRV_REGDW_READ(EDRV_TSIM);
+	dwReg |= (EDRV_TSIM_TT0);
+	EDRV_REGDW_WRITE(EDRV_TSIM,dwReg);
+
+Exit:
+	return EplRet;
+}
+
+tEplKernel EdrvStopTimer(tEplTimerHdl* pTimerHdl_p)
+{
+	tEplKernel EplRet =  kEplSuccessful;
+	unsigned int dwReg;
+
+	if(*pTimerHdl_p != EdrvInstance_l.m_TimerHdl)
+	{
+		EplRet = kEplTimerInvalidHandle;
+	}
+
+	dwReg = 0;
+	dwReg = EDRV_REGDW_READ(EDRV_TSIM);
+	dwReg &= ~(EDRV_TSIM_TT0);
+	EDRV_REGDW_WRITE(EDRV_TSIM,dwReg);
+
+	dwReg = 0;
+	dwReg = EDRV_REGDW_READ(EDRV_TSAUXC);
+	dwReg &= ~(EDRV_TSAUXC_EN_CLK0);
+	EDRV_REGDW_WRITE(EDRV_TSAUXC,dwReg);
+
+Exit:
+	return EplRet;
+}
+
+tEplKernel EdrvEnableTimer(tEplTimerHdl* pTimerHdl_p)
+{
+	tEplKernel EplRet =  kEplSuccessful;
+	unsigned int dwReg;
+
+	if(*pTimerHdl_p != EdrvInstance_l.m_TimerHdl)
+	{
+		EplRet = kEplTimerInvalidHandle;
+	}
+
+	dwReg = 0;
+	dwReg = EDRV_REGDW_READ(EDRV_TSAUXC);
+	dwReg |= (EDRV_TSAUXC_EN_TT0);
+	EDRV_REGDW_WRITE(EDRV_TSAUXC,dwReg);
+
+Exit:
+	return EplRet;
+}
+
+tEplKernel EdrvRegisterHighResCallback(tEplHighResCallback pfnHighResCb_p)
+{
+	tEplKernel EplRet =  kEplSuccessful;
+	if(NULL == pfnHighResCb_p)
+	{
+		EplRet = kEplTimerThreadError;
+		goto Exit;
+	}
+
+	EdrvInstance_l.m_HighResTimerCb = pfnHighResCb_p;
+
+Exit:
+	return EplRet;
+}
+
+
