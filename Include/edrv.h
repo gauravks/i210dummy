@@ -274,7 +274,7 @@ void EdrvClearGpio(INT iPinNo);
 void EdrvSetGpio(INT iPinNo);
 
 void EdrvSetCyclicFrequency(DWORD dwOffset);
-tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p);
+tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p,DWORD dwOffset);
 tEplKernel EdrvStopTimer(tEplTimerHdl* pTimerHdl_p);
 tEplKernel EdrvEnableTimer(tEplTimerHdl* pTimerHdl_p);
 tEplKernel EdrvRegisterHighResCallback(tEplHighResCallback pfnHighResCb_p);

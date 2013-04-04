@@ -894,7 +894,7 @@ tEplKernel  Ret = kEplSuccessful;
             if (((EplDllkCalInstance_g.m_uiWriteIdentReq + 1) % tabentries (EplDllkCalInstance_g.m_auiQueueIdentReq))
                 == EplDllkCalInstance_g.m_uiReadIdentReq)
             {   // queue is full
-            	printk("Buffer Full\n");
+            	//printk("Buffer Full\n");
                 Ret = kEplDllAsyncTxBufferFull;
                 goto Exit;
             }

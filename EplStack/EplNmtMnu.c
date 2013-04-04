@@ -794,7 +794,7 @@ tEplNmtState    NmtState;
         {
             case kEplNmtCmdIdentResponse:
             {   // issue request for local node
-            	printk("1: %s \n",__FUNCTION__);
+            	//printk("1: %s \n",__FUNCTION__);
                 Ret = EplIdentuRequestIdentResponse(0x00, NULL);
                 goto Exit;
             }
@@ -841,7 +841,7 @@ tEplNmtState    NmtState;
                         && (pNodeInfo->m_NodeState != kEplNmtMnuNodeStateConfRestored)
                         && (pNodeInfo->m_NodeState != kEplNmtMnuNodeStateUnknown)))
                 {
-                	printk("2: %s \n",__FUNCTION__);
+                	//printk("2: %s \n",__FUNCTION__);
                 	Ret = EplIdentuRequestIdentResponse(uiNodeId_p, NULL);
                 }
                 goto Exit;
@@ -1351,7 +1351,7 @@ tEplKernel      Ret;
                                                      | 0x80
                                                      | ((pNodeInfo->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ) >> 6)
                                                      | ((pTimerEventArg->m_Arg.m_dwVal & EPL_NMTMNU_TIMERARG_COUNT_SR) >> 8)));
-*/					printk("1: %s \n",__FUNCTION__);
+*/					//printk("1: %s \n",__FUNCTION__);
                     Ret = EplNmtMnuProcessInternalEvent(uiNodeId,
                                                         (tEplNmtState) (bNmtState | EPL_NMT_TYPE_CS),
                                                         EPL_E_NO_ERROR,
@@ -1380,7 +1380,7 @@ tEplKernel      Ret;
                                                      | ((pNodeInfo->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ) >> 6)
                                                      | ((pTimerEventArg->m_Arg.m_dwVal & EPL_NMTMNU_TIMERARG_COUNT_SR) >> 8)));
 */
-                   printk("2: %s \n",__FUNCTION__);
+                  // printk("2: %s \n",__FUNCTION__);
                     Ret = EplNmtMnuProcessInternalEvent(uiNodeId,
                                                         (tEplNmtState) (bNmtState | EPL_NMT_TYPE_CS),
                                                         EPL_E_NO_ERROR,
@@ -1409,7 +1409,7 @@ tEplKernel      Ret;
                                                      | ((pNodeInfo->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_STATREQ) >> 6)
                                                      | ((pTimerEventArg->m_Arg.m_dwVal & EPL_NMTMNU_TIMERARG_COUNT_SR) >> 8)));
 */
-                    printk("3: %s \n",__FUNCTION__);
+                   // printk("3: %s \n",__FUNCTION__);
                     Ret = EplNmtMnuProcessInternalEvent(uiNodeId,
                                                         (tEplNmtState) (bNmtState | EPL_NMT_TYPE_CS),
                                                         EPL_E_NO_ERROR,
@@ -1438,7 +1438,7 @@ tEplKernel      Ret;
                                                      | ((pNodeInfo->m_wFlags & EPL_NMTMNU_NODE_FLAG_COUNT_LONGER) >> 6)
                                                      | ((pTimerEventArg->m_Arg.m_dwVal & EPL_NMTMNU_TIMERARG_COUNT_LO) >> 8)));
 */
-                    printk("4: %s \n",__FUNCTION__);
+                    //printk("4: %s \n",__FUNCTION__);
                     Ret = EplNmtMnuProcessInternalEvent(uiNodeId,
                                                         (tEplNmtState) (bNmtState | EPL_NMT_TYPE_CS),
                                                         EPL_E_NO_ERROR,
@@ -1455,7 +1455,7 @@ tEplKernel      Ret;
         case kEplEventTypeHeartbeat:
         {
         tEplHeartbeatEvent* pHeartbeatEvent = (tEplHeartbeatEvent*)pEvent_p->m_pArg;
-        printk("5: %s \n",__FUNCTION__);
+        //printk("5: %s \n",__FUNCTION__);
             Ret = EplNmtMnuProcessInternalEvent(pHeartbeatEvent->m_uiNodeId,
                                                 pHeartbeatEvent->m_NmtState,
                                                 pHeartbeatEvent->m_wErrorCode,
@@ -1514,7 +1514,7 @@ tEplKernel      Ret;
 
             // process as internal event which update expected NMT state in OD
             if (uiNodeId != EPL_C_ADR_BROADCAST)
-            {printk("6: %s \n",__FUNCTION__);
+            {//printk("6: %s \n",__FUNCTION__);
                 Ret = EplNmtMnuProcessInternalEvent(uiNodeId,
                                                     (tEplNmtState) (bNmtState | EPL_NMT_TYPE_CS),
                                                     0,
@@ -1528,7 +1528,7 @@ tEplKernel      Ret;
                 {
                     if ((EPL_NMTMNU_GET_NODEINFO(uiNodeId)->m_dwNodeCfg & (EPL_NODEASSIGN_NODE_IS_CN | EPL_NODEASSIGN_NODE_EXISTS)) != 0)
                     {
-                    	printk("7: %s \n",__FUNCTION__);
+                    	//printk("7: %s \n",__FUNCTION__);
                     	Ret = EplNmtMnuProcessInternalEvent(uiNodeId,
                                                             (tEplNmtState) (bNmtState | EPL_NMT_TYPE_CS),
                                                             0,
@@ -1650,7 +1650,7 @@ tEplKernel      Ret;
                 goto Exit;
             }
 
-            printk("8: %s \n",__FUNCTION__);
+            //printk("8: %s \n",__FUNCTION__);
             Ret = EplNmtMnuProcessInternalEvent(pNodeCmd->m_uiNodeId,
                                                 (tEplNmtState) (bNmtState | EPL_NMT_TYPE_CS),
                                                 wErrorCode,
@@ -1908,7 +1908,7 @@ tEplKernel      Ret = kEplSuccessful;
                 wErrorCode = EPL_E_NMT_BPO1_DEVICE_TYPE;
             }
         }
-        printk("10: %s \n",__FUNCTION__);
+       // printk("10: %s \n",__FUNCTION__);
         Ret = EplNmtMnuProcessInternalEvent(uiNodeId_p,
                                             NmtState,
                                             wErrorCode,
@@ -1944,7 +1944,7 @@ tEplKernel      Ret = kEplSuccessful;
 
     if (pStatusResponse_p == NULL)
     {   // node did not answer
-    	printk("11: %s \n",__FUNCTION__);
+    	//printk("11: %s \n",__FUNCTION__);
         Ret = EplNmtMnuProcessInternalEvent(uiNodeId_p,
                                             kEplNmtCsNotActive,
                                             EPL_E_NMT_NO_STATUS_RES, // was EPL_E_NO_ERROR
@@ -1952,7 +1952,7 @@ tEplKernel      Ret = kEplSuccessful;
     }
     else
     {   // node answered StatusRequest
-    	printk("12: %s \n",__FUNCTION__);
+    	//printk("12: %s \n",__FUNCTION__);
         Ret = EplNmtMnuProcessInternalEvent(uiNodeId_p,
                                             (tEplNmtState) (AmiGetByteFromLe(&pStatusResponse_p->m_le_bNmtStatus) | EPL_NMT_TYPE_CS),
                                             EPL_E_NO_ERROR,
@@ -2186,7 +2186,7 @@ tEplNmtMnuNodeInfo*	pNodeInfo;
 				if (fNmtResetAllIssued_p == FALSE)
 				{
 					// identify the node
-					printk("3: %s \n",__FUNCTION__);
+					//printk("3: %s \n",__FUNCTION__);
 	                Ret = EplIdentuRequestIdentResponse(uiSubIndex, EplNmtMnuCbIdentResponse);
 					if (Ret != kEplSuccessful)
 					{
@@ -2926,7 +2926,7 @@ tEplTimerArg        TimerArg;
             }
             else
             {   // trigger IdentRequest immediately
-            	printk("4: %s \n",__FUNCTION__);
+            	//printk("4: %s \n",__FUNCTION__);
                 Ret = EplIdentuRequestIdentResponse(uiNodeId_p, EplNmtMnuCbIdentResponse);
             }
             break;
@@ -3108,7 +3108,7 @@ tEplTimerArg        TimerArg;
         {
             EPL_DBGLVL_NMTMN_TRACE("TimerStatReq->IdentReq(%02X)\n", uiNodeId_p);
             // trigger IdentRequest again
-            printk("5: %s \n",__FUNCTION__);
+            //printk("5: %s \n",__FUNCTION__);
             Ret = EplIdentuRequestIdentResponse(uiNodeId_p, EplNmtMnuCbIdentResponse);
             if (Ret != kEplSuccessful)
             {

@@ -973,7 +973,7 @@ EdrvGetMacClock(&qwCurrMacTime);
         	    //time difference is too short => cycle violation!
         		printk("Invalid Dif\n");
         	    udwNextTimerIrqNs -= (EDRV_SHIFT - qwDiffNs);
-        	    EdrvSetGpio(2);
+        	    //EdrvSetGpio(2);
         	/*    Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
         	            		        udwNextTimerIrqNs,
         	            		        EdrvCyclicCbTimerCycle,

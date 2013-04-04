@@ -1599,7 +1599,7 @@ tEplDllkNodeInfo*   pIntNodeInfo;
         goto Exit;
     }
     // mark Tx buffer as empty
-    printk("Handle:%d\n",uiHandle);
+    //printk("Handle:%d\n",uiHandle);
     EplDllkInstance_g.m_pTxBuffer[uiHandle].m_uiTxMsgLen = EPL_DLLK_BUFLEN_EMPTY;
     EplDllkInstance_g.m_pTxBuffer[uiHandle].m_pfnTxHandler = EplDllkCbTransmittedNmtReq;
     uiHandle++;

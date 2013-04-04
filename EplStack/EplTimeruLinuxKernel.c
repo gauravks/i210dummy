@@ -292,7 +292,7 @@ tEplKernel PUBLIC EplTimeruModifyTimerMs(tEplTimerHdl*     pTimerHdl_p,
 {
 tEplKernel          Ret = kEplSuccessful;
 tEplTimeruData*     pData;
-printk("%s %x\n",__FUNCTION__,*pTimerHdl_p);
+//printk("%s %x\n",__FUNCTION__,*pTimerHdl_p);
     // check pointer to handle
     if(pTimerHdl_p == NULL)
     {
@@ -477,7 +477,7 @@ tEplTimerEventArg   TimerEventArg;
     EPL_MEMCPY(&TimerEventArg.m_Arg, &pData->TimerArgument.m_Arg, sizeof (TimerEventArg.m_Arg));
 
     EplEvent.m_EventSink = pData->TimerArgument.m_EventSink;
-    printk("2: %s %x\n",__FUNCTION__,pData->m_Timer.data);
+    //printk("2: %s %x\n",__FUNCTION__,pData->m_Timer.data);
     EplEvent.m_EventType = kEplEventTypeTimer;
     EPL_MEMSET(&EplEvent.m_NetTime, 0x00, sizeof(tEplNetTime));
     EplEvent.m_pArg = &TimerEventArg;

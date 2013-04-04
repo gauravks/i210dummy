@@ -263,7 +263,6 @@ tEplKernel PUBLIC EplTimerHighReskModifyTimerNs(tEplTimerHdl*     pTimerHdl_p,
 	tEplKernel                   Ret;
 	unsigned int                 uiIndex;
 	tEplTimerHighReskTimerInfo*  pTimerInfo;
-	ktime_t                      RelTime;
 	DWORD						 dwTimerFreq;
 
     Ret = kEplSuccessful;
@@ -336,6 +335,7 @@ tEplKernel PUBLIC EplTimerHighReskModifyTimerNs(tEplTimerHdl*     pTimerHdl_p,
     pTimerInfo->m_EventArg.m_Arg.m_dwVal = ulArgument_p;
     pTimerInfo->m_pfnCallback      = pfnCallback_p;
     pTimerInfo->m_ullPeriod        = ullTimeNs_p;
+    pTimerInfo->m_fContinuously	   = fContinuously_p;
 
     Ret = EdrvRegisterHighResCallback(EplTimerHighReskCallback);
     if(Ret != kEplSuccessful)
@@ -343,13 +343,14 @@ tEplKernel PUBLIC EplTimerHighReskModifyTimerNs(tEplTimerHdl*     pTimerHdl_p,
     	goto Exit;
     }
     // Timer Frequency = 2 * Cycletime
-    dwTimerFreq = (DWORD)(ullTimeNs_p * 2);
+    dwTimerFreq = (DWORD)(ullTimeNs_p);
 
     // Set the Frequency
-    EdrvSetCyclicFrequency(dwTimerFreq);
+    //EdrvSetCyclicFrequency();
 
     // Start the Timer
-    Ret = EdrvStartTimer(pTimerInfo->m_EventArg.m_TimerHdl);
+    printk(" Start Timer %x freq %d\n",pTimerInfo->m_EventArg.m_TimerHdl,dwTimerFreq);
+    Ret = EdrvStartTimer(&pTimerInfo->m_EventArg.m_TimerHdl,dwTimerFreq);
 
 Exit:
     return Ret;
@@ -378,6 +379,7 @@ tEplKernel PUBLIC EplTimerHighReskDeleteTimer(tEplTimerHdl* pTimerHdl_p)
 	tEplTimerHighReskTimerInfo* pTimerInfo;
 
 	// check pointer to handle
+	printk("Delete %x\n",*pTimerHdl_p);
 	    if(pTimerHdl_p == NULL)
 	    {
 	        Ret = kEplTimerInvalidHandle;
@@ -432,25 +434,42 @@ void EplTimerHighReskCallback (tEplTimerHdl* pTimerHdl_p)
 	unsigned int                 uiIndex;
 	tEplTimerHdl                 OrgTimerHdl;
 	tEplTimerHighReskTimerInfo*  pTimerInfo;
-	tEplKernel					 Ret;
 
+printk("CB %X\n",*pTimerHdl_p);
 	uiIndex    = HDL_TO_IDX(*pTimerHdl_p);
 	if (uiIndex >= TIMER_COUNT)
 	{   // invalid handle
-
+		 printk("Error");
 	     goto Exit;
 	}
 	pTimerInfo = &EplTimerHighReskInstance_l.m_aTimerInfo[uiIndex];
 
+
 	OrgTimerHdl = *pTimerHdl_p;
+
+
 
 	if (pTimerInfo->m_pfnCallback != NULL)
 	{
+		//printk("Call\n");
 		pTimerInfo->m_pfnCallback(&pTimerInfo->m_EventArg);
 	}
 
-	EdrvEnableTimer(pTimerHdl_p);
+	if(OrgTimerHdl != pTimerInfo->m_EventArg.m_TimerHdl)
+	{
+		goto Exit;
+	}
 
+	if(pTimerInfo->m_fContinuously)
+	{
+			printk("Enable\n");
+			EdrvEnableTimer(pTimerHdl_p);
+	}
+	else
+	{
+		printk("Stop\n");
+		EdrvStopTimer(pTimerHdl_p);
+	}
 Exit:
-    return Ret;
+    return;
 }
