@@ -103,7 +103,7 @@
 #endif
 #endif
 
-#define EDRV_SHIFT		50000ULL
+#define EDRV_SHIFT		150000ULL
 #define EDRV_MIN_SHIFT	5000ULL
 #define EDRV_POS_SHIFT	25000ULL
 //---------------------------------------------------------------------------
@@ -337,6 +337,7 @@ unsigned int    uiNextTxBufferList;
     // check if next list is free
     if (EdrvCyclicInstance_l.m_paTxBufferList[uiNextTxBufferList] != NULL)
     {
+    	printk("Error\n");
         Ret = kEplEdrvNextTxListNotEmpty;
         goto Exit;
     }
@@ -344,6 +345,7 @@ unsigned int    uiNextTxBufferList;
     if ((uiTxBufferCount_p == 0)
         || (uiTxBufferCount_p > EdrvCyclicInstance_l.m_uiMaxTxBufferCount))
     {
+    	printk("Error1\n");
         Ret = kEplEdrvInvalidParam;
         goto Exit;
     }
@@ -351,6 +353,7 @@ unsigned int    uiNextTxBufferList;
     // check if last entry in list equals a NULL pointer
     if (apTxBuffer_p[uiTxBufferCount_p - 1] != NULL)
     {
+    	printk("Error2\n");
         Ret = kEplEdrvInvalidParam;
         goto Exit;
     }
@@ -604,7 +607,7 @@ INT 			 iIndex;
 //EdrvGetMacClock(&dwMacTimeDiff);
 //printk("Tx%d\n",EdrvCyclicInstance_l.m_uiCurTxBufferEntry);
 
-///printk("CB\n");
+//printk("CB\n");
 #if EDRV_CYCLIC_USE_DIAGNOSTICS != FALSE
 DWORD           dwCycleTime;
 DWORD           dwUsedCycleTime;
@@ -625,7 +628,7 @@ unsigned long long ullStartNewCycleTimeStamp;
 
     if (EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry] != NULL)
     {
-    	printk("Printk\n");
+    	printk("			Printk\n");
         Ret = kEplEdrvTxListNotFinishedYet;
         goto Exit;
     }
@@ -639,7 +642,7 @@ unsigned long long ullStartNewCycleTimeStamp;
    // printk("AfCB%d\n",EdrvCyclicInstance_l.m_uiCurTxBufferEntry);
     if (EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry] == NULL)
     {
-    	printk("dd\n");
+    	printk("		dd\n");
         Ret = kEplEdrvCurTxListEmpty;
         goto Exit;
     }
@@ -783,6 +786,7 @@ Exit:
         }
     }
   //  EdrvClearGpio(0);
+    EdrvCyclicInstance_l.m_ullNextCycleTime += (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL);
     return Ret;
 }
 
@@ -904,6 +908,7 @@ EdrvGetMacClock(&qwCurrMacTime);
     		EdrvCyclicInstance_l.m_ullNextCycleTime = qwCurrMacTime + EDRV_SHIFT;
 
     		ullLaunchTime = EdrvCyclicInstance_l.m_ullNextCycleTime;
+    		//printk("		FLt: %lld\n",ullLaunchTime);
 #if (defined EDRVI210 && defined USE_COMP)
     		udwNextTimerIrqNs -=  EdrvCyclicInstance_l.m_dwTxProcDur;
 #endif
@@ -1043,7 +1048,7 @@ EdrvGetMacClock(&qwCurrMacTime);
 
 		}
 
-    EdrvCyclicInstance_l.m_ullNextCycleTime += (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL);
+
 //printk("Restart Timer\n");
    // printk("Irq:,%lld,",udwNextTimerIrqNs);
 #if (defined EDRVI210 && defined USE_COMP)

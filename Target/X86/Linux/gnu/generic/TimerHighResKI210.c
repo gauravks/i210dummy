@@ -349,7 +349,7 @@ tEplKernel PUBLIC EplTimerHighReskModifyTimerNs(tEplTimerHdl*     pTimerHdl_p,
     //EdrvSetCyclicFrequency();
 
     // Start the Timer
-    printk(" Start Timer %x freq %d\n",pTimerInfo->m_EventArg.m_TimerHdl,dwTimerFreq);
+    //printk(" Start Timer %x freq %d\n",pTimerInfo->m_EventArg.m_TimerHdl,dwTimerFreq);
     Ret = EdrvStartTimer(&pTimerInfo->m_EventArg.m_TimerHdl,dwTimerFreq);
 
 Exit:
@@ -379,7 +379,7 @@ tEplKernel PUBLIC EplTimerHighReskDeleteTimer(tEplTimerHdl* pTimerHdl_p)
 	tEplTimerHighReskTimerInfo* pTimerInfo;
 
 	// check pointer to handle
-	printk("Delete %x\n",*pTimerHdl_p);
+	//printk("Delete %x\n",*pTimerHdl_p);
 	    if(pTimerHdl_p == NULL)
 	    {
 	        Ret = kEplTimerInvalidHandle;
@@ -435,7 +435,7 @@ void EplTimerHighReskCallback (tEplTimerHdl* pTimerHdl_p)
 	tEplTimerHdl                 OrgTimerHdl;
 	tEplTimerHighReskTimerInfo*  pTimerInfo;
 
-printk("CB %X\n",*pTimerHdl_p);
+//printk("CB %X\n",*pTimerHdl_p);
 	uiIndex    = HDL_TO_IDX(*pTimerHdl_p);
 	if (uiIndex >= TIMER_COUNT)
 	{   // invalid handle
@@ -462,12 +462,12 @@ printk("CB %X\n",*pTimerHdl_p);
 
 	if(pTimerInfo->m_fContinuously)
 	{
-			printk("Enable\n");
+			//printk("Enable\n");
 			EdrvEnableTimer(pTimerHdl_p);
 	}
 	else
 	{
-		printk("Stop\n");
+		//printk("Stop\n");
 		EdrvStopTimer(pTimerHdl_p);
 	}
 Exit:

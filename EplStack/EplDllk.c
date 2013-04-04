@@ -2649,6 +2649,7 @@ tEplFrameInfo   FrameInfo;
 unsigned int    uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetCycle ^ 1;
 //printk("%s\n",__FUNCTION__);
 //TgtDbgSignalTracePoint(24);
+//EdrvSetGpio(3);
     if (EplDllkInstance_g.m_pfnCbSync != NULL)
     {
         Ret = EplDllkInstance_g.m_pfnCbSync();
@@ -2946,6 +2947,7 @@ unsigned int    uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetCyc
     }
 
 Exit:
+//EdrvClearGpio(3);
     return Ret;
 }
 //---------------------------------------------------------------------------

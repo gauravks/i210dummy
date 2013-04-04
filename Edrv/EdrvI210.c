@@ -1033,7 +1033,7 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 #endif
 	uiBufferNumber = pTxBuffer_p->m_BufferNumber.m_dwVal;
 
-	printk("Send Msg\n");
+	//printk("Send Msg\n");
 	if ((uiBufferNumber >= EDRV_MAX_TX_BUFFERS)
 	        || (EdrvInstance_l.m_afTxBufUsed[uiBufferNumber] == FALSE))
 	{
@@ -1211,7 +1211,7 @@ static irqreturn_t EdrvOtherInterrupt (int iIrqNum, void *pInstData)
 	}
 
 	dwStatus = EDRV_REGDW_READ(EDRV_INTR_READ_REG);
-	printk("TiICR %x\n",dwStatus);
+	//printk("TiICR %x\n",dwStatus);
 	if ((dwStatus & EDRV_INTR_ICR_TIME_SYNC) == 0)
 	{
 	    iHandled = IRQ_NONE;
@@ -1221,21 +1221,21 @@ static irqreturn_t EdrvOtherInterrupt (int iIrqNum, void *pInstData)
 	//EdrvPtpRead(&ts);
 	//printk("TISr nsec %d sec %d\n",ts.tv_nsec,ts.tv_sec);
 	dwStatus &= ~EDRV_INTR_ICR_TIME_SYNC;
-	printk("Status %x\n",dwStatus);
+//	printk("Status %x\n",dwStatus);
 	//EDRV_REGDW_WRITE(EDRV_INTR_SET_REG,dwStatus);
 	dwReg = EDRV_REGDW_READ(EDRV_TSICR);
 	dwReg = 0;
 	dwReg = EDRV_REGDW_READ(EDRV_TSAUXC);
-	printk("TSAUXC %x\n",dwReg);
-	//if(flag)
-	//{
-	//  EdrvClearGpio(3);
-	//}
-	//else
-	//{
-	//	EdrvSetGpio(3);
-	//}
-	//flag = !flag;
+	//printk("TSAUXC %x\n",dwReg);
+	if(flag)
+	{
+	  EdrvClearGpio(3);
+	}
+	else
+	{
+		EdrvSetGpio(3);
+	}
+	flag = !flag;
 	EdrvInstance_l.m_HighResTimerCb(&EdrvInstance_l.m_TimerHdl);
 			//EdrvClearGpio(3);
 
@@ -1290,9 +1290,9 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	pRxQueue = EdrvInstance_l.m_pRxQueue[pQVector->m_uiQueueIdx];
 	// Read the interrupt status
 	dwReg = EDRV_REGDW_READ(EDRV_INTR_READ_REG);
-	printk("ICR %x\n",dwReg);
+//	printk("ICR %x\n",dwReg);
 	//Process Rx
-	if ((pRxQueue != NULL))// && (dwReg & EDRV_INTR_ICR_RXDW))
+	if ((pRxQueue != NULL) && (dwReg & EDRV_INTR_ICR_RXDW))
 	{
 		tEdrvAdvRxDesc*    pAdvRxDesc;
 		tEdrvRxBuffer      RxBuffer;
@@ -1360,7 +1360,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	}
 
 	//Process Tx
-	if ((pTxQueue != NULL))// && (dwReg & EDRV_INTR_ICR_TXDW))
+	if ((pTxQueue != NULL) && (dwReg & EDRV_INTR_ICR_TXDW))
 	{
 		EDRV_COUNT_TX;
 		//printk("Tx \n");
@@ -1402,7 +1402,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 				pAdvTxDesc->m_sWb.m_le_dwstatus = 0;
 				pTxBuffer = pTxQueue->m_apTxBuffer[iIndex];
 				pTxQueue->m_apTxBuffer[iIndex] = NULL;
-				EdrvSetGpio(3);
+				EdrvSetGpio(2);
 			//	if(pTxBuffer->m_pbBuffer[20] == 1)
 			//	{
 			//		TgtDbgSignalTracePoint(26);
@@ -1442,7 +1442,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 								 pTxQueue->m_PktBuff[iIndex].m_DmaAddr,\
 								 pTxQueue->m_PktBuff[iIndex].m_uilen, \
 								 DMA_TO_DEVICE);
-				EdrvClearGpio(3);
+				EdrvClearGpio(2);
 			}
 			else
 			{
@@ -1653,7 +1653,7 @@ static int EdrvMdicWrite(unsigned int iPhyreg_p, unsigned short wValue_p)
 	dwRegVal |= EDRV_MDIC_OP_WRITE;
 	dwRegVal |= EDRV_MDIC_INTR_DIS;
 	dwRegVal &= ~EDRV_MDIC_RD;
-  printk("EdrvMdicWrite %x\n",dwRegVal);
+  //printk("EdrvMdicWrite %x\n",dwRegVal);
 	EDRV_REGDW_WRITE(EDRV_MDIC_REG,dwRegVal);
 	// wait for completion of transfer
 	do
@@ -1691,7 +1691,7 @@ static unsigned short EdrvMdicRead(int iPhyreg_p)
 	dwRegVal |= EDRV_MDIC_OP_READ;
 	dwRegVal |= EDRV_MDIC_INTR_DIS;
 	dwRegVal &= ~EDRV_MDIC_RD;
-	printk("EdrvMdicRead %x\n",dwRegVal);
+	//printk("EdrvMdicRead %x\n",dwRegVal);
 	EDRV_REGDW_WRITE(EDRV_MDIC_REG,dwRegVal);
 
 
@@ -2919,7 +2919,7 @@ void EdrvSetCyclicFrequency(DWORD dwOffset)
 	EDRV_REGDW_WRITE(EDRV_TRGTTIML0, ts.tv_nsec);
 	EDRV_REGDW_WRITE(EDRV_TRGTTIMH0, ts.tv_sec);
 
-	printk("TIme nsec %d sec %d\n",ts.tv_nsec,ts.tv_sec);
+	//printk("TIme nsec %d sec %d\n",ts.tv_nsec,ts.tv_sec);
 	EDRV_REGDW_WRITE(EDRV_FREQOUT0,dwOffset);
 }
 tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p,DWORD dwOffset)
@@ -2973,7 +2973,7 @@ tEplKernel EdrvStopTimer(tEplTimerHdl* pTimerHdl_p)
 		EplRet = kEplTimerInvalidHandle;
 	}
 
-	printk("Stop Timer\n");
+	//printk("Stop Timer\n");
 	EdrvInstance_l.m_TimerHdl = 0;
 	dwReg = 0;
 	dwReg = EDRV_REGDW_READ(EDRV_TSIM);
@@ -2995,7 +2995,7 @@ tEplKernel EdrvEnableTimer(tEplTimerHdl* pTimerHdl_p)
 	unsigned int dwReg;
 	struct timespec ts;
 	EdrvPtpRead(&ts);
-	printk("Enable nsec %d sec %d\n",ts.tv_nsec,ts.tv_sec);
+	//printk("Enable nsec %d sec %d\n",ts.tv_nsec,ts.tv_sec);
 	if(*pTimerHdl_p != EdrvInstance_l.m_TimerHdl)
 	{
 		printk("Invalid Handle\n");
@@ -3005,7 +3005,7 @@ tEplKernel EdrvEnableTimer(tEplTimerHdl* pTimerHdl_p)
 
 	dwReg = 0;
 	dwReg = EDRV_REGDW_READ(EDRV_TSAUXC);
-	printk("TSAUX %x\n",dwReg);
+	//printk("TSAUX %x\n",dwReg);
 	dwReg |= (EDRV_TSAUXC_EN_TT0 );//| EDRV_TSAUXC_EN_CLK0);
 	EDRV_REGDW_WRITE(EDRV_TSAUXC,dwReg);
 
