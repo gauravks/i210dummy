@@ -2361,7 +2361,11 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	iResult = dma_set_mask(pci_dev_to_dev(pPciDev), DMA_BIT_MASK(64));
 	if ( 0 == iResult )
 	{
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 	   dma_set_coherent_mask(pci_dev_to_dev(pPciDev), DMA_BIT_MASK(64));
+#else
+	   pci_set_dma_mask(pPciDev, DMA_BIT_MASK(64));   
+#endif
 	}
 	else
 	{
@@ -2369,7 +2373,11 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	    iResult = dma_set_mask(&pPciDev->dev, DMA_BIT_MASK(32));
 	    if(0 == iResult)
 	    {
-	       iResult = dma_set_coherent_mask(&pPciDev->dev, DMA_BIT_MASK(32));
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+	   iResult = dma_set_coherent_mask(pci_dev_to_dev(pPciDev), DMA_BIT_MASK(32));
+#else
+	   iResult = pci_set_dma_mask(pPciDev, DMA_BIT_MASK(32));   
+#endif
 	       if(0 != iResult)
 	       {
 	           printk("[EPLi210]: No usable DMA configuration available\n");
@@ -2636,6 +2644,12 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	        EdrvInstance_l.m_InitParam.m_abMyMacAddr[4] = (dwReg >>  0) & 0xFF;
 	        EdrvInstance_l.m_InitParam.m_abMyMacAddr[5] = (dwReg >>  8) & 0xFF;
 	    }
+
+	// initialize Multicast Table Array to 0
+	for (iIndex = 0; iIndex < 128; iIndex++)
+	{
+	    EDRV_REGDW_WRITE(EDRV_REGDW_MTA(iIndex), 0);
+	}
 	// Alloc Rx Queue here
 
 	for(iIndex = 0 ;iIndex < EdrvInstance_l.m_RxMaxQueue ; iIndex++)
