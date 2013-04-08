@@ -163,7 +163,7 @@ static tEplKernel EdrvCyclicProcessTxBufferList(void);
 static tEdrvCyclicInstance EdrvCyclicInstance_l;
 
 #if (defined EDRVI210 && defined USE_COMP)
-unsigned long long	ullLaunchTime;
+//unsigned long long	ullLaunchTime;
 __u64				udwNextTimerIrqNs;
 #endif
 
@@ -919,17 +919,14 @@ EdrvGetMacClock(&qwCurrMacTime);
     	{
     		ullLaunchTime = EdrvCyclicInstance_l.m_ullNextCycleTime;
     		//printk("Lt: %lld\n",ullLaunchTime);
-    		//if(qwCurrMacTime > (ullLaunchTime) )
-    		//{
-    		//	EdrvSetGpio(3);
-    		//}
-    		//else
-    	//	{
-    			//EdrvClearGpio(3);
-    	//	}
+    		if(qwCurrMacTime > (ullLaunchTime) )
+    		{
+    			printk("Cycle Error\n");
+    			Ret = kEplEdrvTxListNotFinishedYet;
+    			goto Exit;
+    		}
 
-       // if(bFirstPacket)
-       // {
+
 
 
         	//bFirstPacket = FALSE;
@@ -1032,7 +1029,8 @@ EdrvGetMacClock(&qwCurrMacTime);
 
 			if((pTxBuffer->m_qwLaunchTime - qwCycleMin) >  (qwCycleMax - qwCycleMin))
 			{
-				printk("Cycle Violation\n");
+				Ret = kEplEdrvTxListNotFinishedYet;
+				goto Exit;
 			}
 			//printk("Send\n");
 			//printk("Cb:%p\n",pTxBuffer);
@@ -1042,7 +1040,7 @@ EdrvGetMacClock(&qwCurrMacTime);
 				printk("Send Failes %x",Ret);
 				goto Exit;
 			}
-			//pTxBuffer->m_qwLaunchTime = 0;
+			pTxBuffer->m_qwLaunchTime = 0;
 
 			EdrvCyclicInstance_l.m_uiCurTxBufferEntry++;
 

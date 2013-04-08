@@ -73,6 +73,8 @@
 // const defines
 //---------------------------------------------------------------------------
 
+//#define USE_COMP
+
 #define TIMER_COUNT			  1
 
 #define TIMER_MIN_VAL_SINGLE  5000         /* min 5us */
@@ -435,6 +437,9 @@ void EplTimerHighReskCallback (tEplTimerHdl* pTimerHdl_p)
 	tEplTimerHdl                 OrgTimerHdl;
 	tEplTimerHighReskTimerInfo*  pTimerInfo;
 
+#ifdef USE_COMP
+	unsigned int				 iOffset;
+#endif
 //printk("CB %X\n",*pTimerHdl_p);
 	uiIndex    = HDL_TO_IDX(*pTimerHdl_p);
 	if (uiIndex >= TIMER_COUNT)
@@ -459,10 +464,15 @@ void EplTimerHighReskCallback (tEplTimerHdl* pTimerHdl_p)
 	{
 		goto Exit;
 	}
-
+#ifdef USE_COMP
+	iOffset = pTimerInfo->m_EventArg.m_Arg.m_dwVal;
+#endif
 	if(pTimerInfo->m_fContinuously)
 	{
 			//printk("Enable\n");
+#ifdef USE_COMP
+			EdrvSetCyclicFrequency(iOffset);
+#endif
 			EdrvEnableTimer(pTimerHdl_p);
 	}
 	else

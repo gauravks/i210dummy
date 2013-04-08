@@ -93,36 +93,35 @@
 #define EDRV_MAX_QUEUE_VECTOR	 1
 #endif
 
-#define EDRV_CTRL_REG            0x00000
-#define EDRV_CTRL_EXTN_REG       0x00018
-#define EDRV_STATUS_REG          0x00008
-#define EDRV_MDIC_REG            0x00020
-#define EDRV_INTR_READ_REG       0x01500
-#define EDRV_INTR_SET_REG        0x01504
-#define EDRV_INTR_MASK_SET_READ  0x01508
-#define EDRV_INTR_MASK_CLEAR     0x0150C
-#define EDRV_INTR_ACK_AUTO_MASK  0x01510
-#define EDRV_INTR_EIAC			 0x0152C
-#define EDRV_INTR_GPIE_REG       0x01514
-#define EDRV_IVAR0_REG			 0x01700
-#define EDRV_IVAR_MISC			 0x01740 /* IVAR for "other" causes - RW */
-#define EDRV_EXT_INTR_REG        0X01580
-#define EDRV_EXT_INTR_MASK_CLEAR 0x01528
-#define EDRV_EXT_INTR_MASK_SET   0x01524
-#define EDRV_MDICNFG_REG         0x00E04
-#define EDRV_SWSM_REG            0x05B50     // Software Semaphore
-#define EDRV_TIPG_REG            0x00410     // Transmit Inter Packet Gap
-#define EDRV_TXPBSIZE_REG        0x03404
-#define EDRV_DCA_CTRL_REG        0x05B74
-#define EDRV_EECD_REG	         0x00010
-#define EDRV_SW_FW_SYNC	         0x05B5C
-#define	EDRV_SYSTIMR_REG		 0x0B6F8
-#define EDRV_SYSTIML_REG		 0x0B600 /* System time register Low - RO */
-#define EDRV_SYSTIMH_REG		 0x0B604 /* System time register High - RO */
-#define EDRV_TSAUXC_REG			 0x0B640
-#define EDRV_STAT_TPT            0x040D4
-#define EDRV_MRQC_REG			 0x05818
-#define EDRV_EEER_REG			 0x00E30
+#define EDRV_CTRL_REG            0x00000	// Device Control Register
+#define EDRV_CTRL_EXTN_REG       0x00018	// Extended Device Control Register
+#define EDRV_STATUS_REG          0x00008	// Device Status Register
+#define EDRV_MDIC_REG            0x00020	// MDI Control Register
+#define EDRV_INTR_READ_REG       0x01500	// Interrupt Cause Read
+#define EDRV_INTR_SET_REG        0x01504	// Interrupt Cause Set
+#define EDRV_INTR_MASK_SET_READ  0x01508	// Interrupt Mask Set/Read
+#define EDRV_INTR_MASK_CLEAR     0x0150C	// Interrupt Mask Clear
+#define EDRV_INTR_ACK_AUTO_MASK  0x01510	// Interrupt Acknowledge Auto Mask
+#define EDRV_INTR_EIAC			 0x0152C	// Extended Interrupt Auto Clear
+#define EDRV_INTR_GPIE_REG       0x01514	// General Purpose Interrupt Enable
+#define EDRV_IVAR0_REG			 0x01700	// Interrupt Vector Allocation Registers (Tx-Rx queues)
+#define EDRV_IVAR_MISC			 0x01740 	// IVAR for "other" causes
+#define EDRV_EXT_INTR_REG        0X01580	// Extended Interrupt Cause Set
+#define EDRV_EXT_INTR_MASK_CLEAR 0x01528	// Extended Interrupt Mask Clear
+#define EDRV_EXT_INTR_MASK_SET   0x01524	// Extended Interrupt Mask Set/Read
+#define EDRV_MDICNFG_REG         0x00E04	// MDC/MDIO Configuration Register
+#define EDRV_SWSM_REG            0x05B50    // Software Semaphore
+#define EDRV_TIPG_REG            0x00410    // Transmit Inter Packet Gap
+#define EDRV_TXPBSIZE_REG        0x03404	// Transmit Packet Buffer Size
+#define EDRV_DCA_CTRL_REG        0x05B74	//
+#define EDRV_EECD_REG	         0x00010	// EEPROM-Mode Control Register
+#define EDRV_SW_FW_SYNC	         0x05B5C	// Software-Firmware Synchronization
+#define	EDRV_SYSTIMR_REG		 0x0B6F8	// System time register Residue
+#define EDRV_SYSTIML_REG		 0x0B600 	// System time register Low
+#define EDRV_SYSTIMH_REG		 0x0B604 	// System time register High
+#define EDRV_STAT_TPT            0x040D4	// Total Packets Transmitted
+#define EDRV_MRQC_REG			 0x05818	// Multiple Receive Queues Command
+#define EDRV_EEER_REG			 0x00E30	// Energy Efficient Ethernet (EEE) Register
 
 #define SDP0_SET_DIR_OUT		0x00400000
 #define SDP0_SET_HIGH			0x00040000
@@ -134,68 +133,46 @@
 #define SDP3_SET_HIGH       	0x00000080
 
 
-#define EDRV_SWSM_SMBI           0x00000001
+#define EDRV_SWSM_SMBI           0x00000001	 //
 #define EDRV_SWSM_SWESMBI        0x00000002  // Software EEPROM Semaphore Bit
-#define EDRV_TIPG_DEF            0x00702008
 #define EDRV_EECD_AUTO_RD		 0x00000200
 #define EDRV_SWFW_PHY0_SM	     0x02
+
 // Tx Registers
-#define EDRV_TCTL_REG            0x00400
-#define EDRV_TCTL_EXT_REG        0x00404
-#define EDRV_DTXCTL_REG          0x03590
-#define EDRV_DTX_MAX_PKTSZ_REG   0x0355C
-#define EDRV_TXPBSIZE_REG		 0x03404
-#define EDRV_RXPBSIZE_REG		 0x02404
-#define EDRV_TQAVCTRL_REG        0x03570
-#define EDRV_LAUNCH_OSO			 0x03578
-#define EDRV_TQAVARBCTRL_REG	 0x03574 // TODO :Verify this register
+#define EDRV_TCTL_REG            0x00400	// Tx Control
+#define EDRV_TCTL_EXT_REG        0x00404	// Tx Control Extended
+#define EDRV_DTXCTL_REG          0x03590	// DMA Tx Control
+#define EDRV_DTX_MAX_PKTSZ_REG   0x0355C	// DMA Tx Max Allowable Packet Size
+#define EDRV_TXPBSIZE_REG		 0x03404	// Transmit Packet Buffer Size
+#define EDRV_TQAVCTRL_REG        0x03570	// Transmit Qav Control
+#define EDRV_TQAVARBCTRL_REG	 0x03574 	// TODO :Verify this register
+#define EDRV_TIPG_DEF            0x00702008 // default according to Intel PCIe GbE Controllers Open Source Software Developer's Manual
 #define EDRV_TXPBSIZE_DEF		 0x04104208 // 8 Kb TQ0, 8Kb TQ1, 4 Kb TQ2, 4Kb TQ3 and 4 Kb Os2Bmc
-
-#define EDRV_TSAUXC_SAMP_AUTO		0x00000008
-#define EDRV_TSAUXC					0x0B640
-#define EDRV_AUXSTMPL0 			0x0B65C /* Auxiliary Time Stamp 0 Reg - Low */
-#define EDRV_AUXSTMPH0 			0x0B660 /* Auxiliary Time Stamp 0 Reg - Low */
-#define EDRV_TSAUXC_EN_TT0		(1 << 0)
-#define EDRV_TSAUXC_EN_TT1		(1 << 1)
-#define EDRV_TSAUXC_EN_CLK0 	(1 << 2)
-#define EDRV_TSAUXC_ST0			(1 << 4)
-#define EDRV_TRGTTIML0 			0x0B644
-#define EDRV_TRGTTIMH0 			0x0B648
-#define EDRV_TSSDP 				0x0003C
-#define EDRV_TSSDP_TS_SDP3_SEL_CLK0 	(2 << 15)
-#define EDRV_TSSDP_TS_SDP3_SEL_CLK1		(3 << 15)
-#define EDRV_TSSDP_TS_SDP3_EN 	(1 << 17)
-#define EDRV_TSSDP_TS_SDP0_SEL_CLK0 	(2 << 6)
-#define EDRV_TSSDP_TS_SDP0_EN 	(1 << 8)
-
-#define EDRV_FREQOUT0 			0x0B654
-#define EDRV_TSIM 				0x0B674
-#define EDRV_TSICR 				0x0B66C
-#define	EDRV_TSIM_TT0 			(1 << 3)
-#define	EDRV_TSIM_TT1 			(1 << 4)
 
 
 #define EDRV_TDBAL(n)            ((n < 4) ? (0x0E000 + 0x40 * n) :\
-                                 (0x0E000 + 0x40 * (n - 4)))
+                                 (0x0E000 + 0x40 * (n - 4)))			// Tx Descriptor Base Low ( n: 0-3 )
 #define EDRV_TDBAH(n)            ((n < 4) ? (0x0E004 + 0x40 * n) :\
-                                 (0x0E004 + 0x40 * (n - 4)))
+                                 (0x0E004 + 0x40 * (n - 4)))			// Tx Descriptor Base High ( n: 0-3 )
 #define EDRV_TDLEN(n)            ((n < 4) ? (0x0E008 + 0x40 * n) :\
-                                 (0x0E008 + 0x40 * (n - 4)))
+                                 (0x0E008 + 0x40 * (n - 4)))			// Tx Descriptor Ring Length ( n: 0-3 )
 #define EDRV_TDHEAD(n)           ((n < 4) ? (0x0E010 + 0x40 * n) :\
-                                 (0x0E010 + 0x40 * (n - 4)))
+                                 (0x0E010 + 0x40 * (n - 4)))			// Tx Descriptor Head ( n: 0-3 )
 #define EDRV_TDTAIL(n)           ((n < 4) ? (0x0E018 + 0x40 * n) :\
-                                 (0x0E018 + 0x40 * (n - 4)))
+                                 (0x0E018 + 0x40 * (n - 4)))			// Tx Descriptor Tail ( n: 0-3 )
 #define EDRV_TXDCTL(n)           ((n < 4) ? (0x0E028 + 0x40 * n) :\
-                                 (0x0E028 + 0x40 * (n - 4)))
+                                 (0x0E028 + 0x40 * (n - 4)))			// Tx Descriptor Control Queue ( n: 0-3 )
 #define EDRV_TQAVCC(n)           ((n < 2) ? (0x03004 + 0x40 * n) :\
-                                 (0x03004 + 0x40 * (n - 2)))
+                                 (0x03004 + 0x40 * (n - 2)))			// Tx Qav Credit Control ( n: 0-1 )
 #define EDRV_TQAVHC(n)           ((n < 2) ? (0x0300C + 0x40 * n) :\
-                                 (0x0300C + 0x40 * (n - 2)))
+                                 (0x0300C + 0x40 * (n - 2)))			// Tx Qav High Credits ( n: 0-1 )
 #define EDRV_TDWBAL(n)           ((n < 4) ? (0x0E038 + 0x40 * n) :\
-                                 (0x0E038 + 0x40 * (n - 1)))
+                                 (0x0E038 + 0x40 * (n - 1)))			// Tx Descriptor WB Address Low Queue ( n: 0-3 )
+
+
 // Rx Registers
-#define EDRV_RCTL_REG			 0x00100
-#define EDRV_RXPBSIZE_REG		 0x02404
+#define EDRV_RCTL_REG			 0x00100	 //	Rx Control
+#define EDRV_RXPBSIZE_REG		 0x02404	 // Rx Packet Buffer Size
 #define EDRV_RXPBSIZE_CLEAR		 0x3F
 #define EDRV_RXPBSIZE_DEF		 0x8000001E
 #define	EDRV_RAH_AV				 (1 << 31)
@@ -217,7 +194,34 @@
                                  (0x10010 + 0x100  * (n - 4)))
 #define EDRV_RAL(n)				 (0x05400 + 8 * n)
 #define EDRV_RAH(n)				 (0x05404 + 8 * n)
+#define EDRV_MTA(n)        		 (0x05200 + 4*n)  // Multicast Table Array
 
+
+// Time Sync Registers and Defines
+#define EDRV_LAUNCH_OSO			0x03578		// Launch Time Offset Register 0
+#define EDRV_FREQOUT0 			0x0B654		// Frequency Out 0 Control Register
+#define EDRV_TSIM 				0x0B674		// Time Sync Interrupt Mask Register
+#define EDRV_TSICR 				0x0B66C		// Time Sync Interrupt Cause Register
+#define EDRV_TSAUXC				0x0B640		// Auxiliary Control Register
+#define EDRV_AUXSTMPL0 			0x0B65C 	// Auxiliary Time Stamp 0 Reg - Low
+#define EDRV_AUXSTMPH0 			0x0B660 	// Auxiliary Time Stamp 0 Reg - High
+#define EDRV_TRGTTIML0 			0x0B644		// Target Time Register 0 Low
+#define EDRV_TRGTTIMH0 			0x0B648		// Target Time Register 0 High
+#define EDRV_TSSDP 				0x0003C		// Time Sync SDP Configuration Register
+
+#define	EDRV_TSIM_TT0 			(1 << 3)	// Target time 0 Trigger Mask.
+#define	EDRV_TSIM_TT1 			(1 << 4)	// Target time 1 Trigger Mask.
+#define EDRV_TSAUXC_SAMP_AUTO	0x00000008	// Sample SYSTIM into AUXSTMP0 register
+
+#define EDRV_TSAUXC_EN_TT0		(1 << 0)	// Enable target time 0
+#define EDRV_TSAUXC_EN_TT1		(1 << 1)	// Enable target time 1
+#define EDRV_TSAUXC_EN_CLK0 	(1 << 2)	// Enable Configurable Frequency Clock 0
+#define EDRV_TSAUXC_ST0			(1 << 4)	// Start Clock 0 Toggle on Target Time 0
+
+#define EDRV_TSSDP_TS_SDP3_SEL_CLK0 	(2 << 15)	// Freq clock 0 is output on SDP3
+#define EDRV_TSSDP_TS_SDP3_EN 			(1 << 17)	// SDP3 is assigned to Tsync
+#define EDRV_TSSDP_TS_SDP0_SEL_CLK0 	(2 << 6 )	// Freq clock 0 is output on SDP0
+#define EDRV_TSSDP_TS_SDP0_EN 			(1 << 8 )	// SDP0 is assigned to Tsync
 
 // MDIC specific defines
 #define EDRV_MDIC_DATA_MASK      0x0000FFFF
@@ -355,11 +359,11 @@
 
 
 //Rx Register defines
-#define EDRV_RCTL_EN			(1 << 1 )
-#define EDRV_RCTL_SBP			(1 << 2 ) // Store Bad Packets
-#define EDRV_RCTL_UPE			(1 << 3 ) // Unicast Enable
-#define EDRV_RCTL_MPE			(1 << 4 ) // Multicast Enable
-#define EDRV_RCTL_LPE			(1 << 5 ) // Long packet Reception enable
+#define EDRV_RCTL_EN				 	(1 << 1 )
+#define EDRV_RCTL_SBP					(1 << 2 ) // Store Bad Packets
+#define EDRV_RCTL_UPE					(1 << 3 ) // Unicast Enable
+#define EDRV_RCTL_MPE					(1 << 4 ) // Multicast Enable
+#define EDRV_RCTL_LPE					(1 << 5 ) // Long packet Reception enable
 #define EDRV_RCTL_LBM_MAC		(1 << 6 ) // Loop back mode
 #define EDRV_RCTL_LBM_CLEAR		(3 << 6 )
 #define EDRV_RCTL_SWFLUSH 		(1 << 26)
@@ -729,8 +733,45 @@ static inline struct device *pci_dev_to_dev(struct pci_dev *pdev)
 tEplKernel EdrvDefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 {
 	tEplKernel      Ret = kEplSuccessful;
+	DWORD       	dwData;
+	int         	iIndex;
 	printk("%s\n",__FUNCTION__);
-	    return Ret;
+	// entry 0 is used for local MAC address
+
+	for (iIndex = 1; iIndex < 16; iIndex++)
+	{
+	    dwData = EDRV_REGDW_READ(EDRV_RAH(iIndex));
+	    if ((dwData & EDRV_RAH_AV) == 0)
+	    {   // free MAC address entry
+	        break;
+	    }
+	}
+
+	if (iIndex == 16)
+	{   // no free entry found
+	    printk("%s Implementation of Multicast Table Array support required\n", __FUNCTION__);
+	    Ret = kEplEdrvInitError;
+	    goto Exit;
+	}
+	else
+	{
+	    // write MAC address to free entry
+	    dwData = 0;
+	    dwData |= pbMacAddr_p[0] <<  0;
+	    dwData |= pbMacAddr_p[1] <<  8;
+	    dwData |= pbMacAddr_p[2] << 16;
+	    dwData |= pbMacAddr_p[3] << 24;
+	    EDRV_REGDW_WRITE(EDRV_RAL(iIndex), dwData);
+	    dwData = 0;
+	    dwData |= pbMacAddr_p[4] <<  0;
+	    dwData |= pbMacAddr_p[5] <<  8;
+	    dwData |= EDRV_RAH_AV;
+	    EDRV_REGDW_WRITE(EDRV_RAH(iIndex), dwData);
+	}
+
+Exit:
+    return Ret;
+
 }
 //---------------------------------------------------------------------------
 //
@@ -747,9 +788,37 @@ tEplKernel EdrvDefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 //---------------------------------------------------------------------------
 tEplKernel EdrvUndefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 {
-	tEplKernel      Ret = kEplSuccessful;
-	printk("%s\n",__FUNCTION__);
-		    return Ret;
+	tEplKernel  Ret = kEplSuccessful;
+	DWORD       dwData;
+	int         iIndex;
+	DWORD       dwAddrLow;
+	DWORD       dwAddrHigh;
+
+	dwAddrLow   = 0;
+	dwAddrLow  |= pbMacAddr_p[0] <<  0;
+	dwAddrLow  |= pbMacAddr_p[1] <<  8;
+	dwAddrLow  |= pbMacAddr_p[2] << 16;
+	dwAddrLow  |= pbMacAddr_p[3] << 24;
+	dwAddrHigh  = 0;
+	dwAddrHigh |= pbMacAddr_p[4] <<  0;
+	dwAddrHigh |= pbMacAddr_p[5] <<  8;
+	dwAddrHigh |= EDRV_RAH_AV;
+
+	for (iIndex = 1; iIndex < 16; iIndex++)
+	{
+	    dwData = EDRV_REGDW_READ(EDRV_RAH(iIndex));
+	    if ((dwData & (EDRV_RAH_AV | 0xFFFF)) == dwAddrHigh)
+	    {
+	        dwData = EDRV_REGDW_READ(EDRV_RAL(iIndex));
+	        if (dwData == dwAddrLow)
+	        {   // set address valid bit to invalid
+	            EDRV_REGDW_WRITE(EDRV_RAH(iIndex), 0);
+	            break;
+	        }
+	    }
+	}
+
+	return Ret;
 }
 tEplKernel EdrvChangeFilter(tEdrvFilter*    pFilter_p,
                             unsigned int    uiCount_p,
@@ -1032,8 +1101,9 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 	QWORD				qwLaunchTime,qwTime;
 #endif
 	uiBufferNumber = pTxBuffer_p->m_BufferNumber.m_dwVal;
-
+	//EdrvSetGpio(2);
 	//printk("Send Msg\n");
+
 	if ((uiBufferNumber >= EDRV_MAX_TX_BUFFERS)
 	        || (EdrvInstance_l.m_afTxBufUsed[uiBufferNumber] == FALSE))
 	{
@@ -1169,7 +1239,7 @@ tEplKernel EdrvSendTxMsg              (tEdrvTxBuffer * pTxBuffer_p)
 
 
 #endif
-
+			//EdrvClearGpio(2);
 Exit:
 	return Ret;
 
@@ -1224,16 +1294,16 @@ static irqreturn_t EdrvOtherInterrupt (int iIrqNum, void *pInstData)
 //	printk("Status %x\n",dwStatus);
 	//EDRV_REGDW_WRITE(EDRV_INTR_SET_REG,dwStatus);
 	dwReg = EDRV_REGDW_READ(EDRV_TSICR);
-	dwReg = 0;
-	dwReg = EDRV_REGDW_READ(EDRV_TSAUXC);
+	//dwReg = 0;
+	//dwReg = EDRV_REGDW_READ(EDRV_TSAUXC);
 	//printk("TSAUXC %x\n",dwReg);
 	if(flag)
 	{
-	  EdrvClearGpio(3);
+	  //EdrvClearGpio(3);
 	}
 	else
 	{
-		EdrvSetGpio(3);
+		//EdrvSetGpio(3);
 	}
 	flag = !flag;
 	EdrvInstance_l.m_HighResTimerCb(&EdrvInstance_l.m_TimerHdl);
@@ -1268,9 +1338,9 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	int             iHandled;
 	INT				iIndex;
 	int				Ret;
-	tEdrvQVector *pQVector = (tEdrvQVector *)ppDevInstData_p;
-	tEdrvQueue *pTxQueue;
-	tEdrvQueue *pRxQueue;
+	tEdrvQVector 	*pQVector = (tEdrvQVector *)ppDevInstData_p;
+	tEdrvQueue 		*pTxQueue;
+	tEdrvQueue 		*pRxQueue;
 	static unsigned char flag = 0;
 	iHandled = IRQ_HANDLED;
 
@@ -1289,17 +1359,17 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	pTxQueue = EdrvInstance_l.m_pTxQueue[pQVector->m_uiQueueIdx];
 	pRxQueue = EdrvInstance_l.m_pRxQueue[pQVector->m_uiQueueIdx];
 	// Read the interrupt status
-	dwReg = EDRV_REGDW_READ(EDRV_INTR_READ_REG);
-//	printk("ICR %x\n",dwReg);
+	//dwReg = EDRV_REGDW_READ(EDRV_INTR_READ_REG);
+	//printk("ICR %x\n",dwReg);
 	//Process Rx
-	if ((pRxQueue != NULL) && (dwReg & EDRV_INTR_ICR_RXDW))
+	if ((pRxQueue != NULL) )//&& (dwReg & EDRV_INTR_ICR_RXDW))
 	{
 		tEdrvAdvRxDesc*    pAdvRxDesc;
 		tEdrvRxBuffer      RxBuffer;
 		iIndex = pRxQueue->m_iNextWb;
 		//printk("RX\n");
 
-		dwReg &= ~EDRV_INTR_ICR_RXDW;
+		//dwReg &= ~EDRV_INTR_ICR_RXDW;
 		//EDRV_REGDW_WRITE(EDRV_INTR_SET_REG,dwReg);
 
 		pAdvRxDesc = EDRV_GET_RX_DESC(pRxQueue,iIndex);
@@ -1308,15 +1378,17 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 				(pAdvRxDesc->sWb.m_dwExtStatusError & EDRV_RDESC_STATUS_EOP))
 		{
 			UINT					uiRcvLen;
+			EdrvSetGpio(3);
 			if(pAdvRxDesc->sWb.m_dwExtStatusError & EDRV_RDESC_ERRORS_RXE)
 			{
 				EDRV_COUNT_RX_ERR_CRC;
-				//printk("R1\n");
+				printk("R1\n");
 			}
 			else
 			{
+
 				//printk("Wb:%d\n",iIndex);
-				//EdrvSetGpio(2);
+				//EdrvSetGpio(3);
 				//printk("R\n");
 				// good packet
 				//printk("T:%d H:%d\n",EDRV_REGDW_READ(EDRV_RDTAIL(pRxQueue->m_iIndex)),EDRV_REGDW_READ(EDRV_RDTAIL(pRxQueue->m_iIndex)));
@@ -1354,26 +1426,28 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 
 				pAdvRxDesc = EDRV_GET_RX_DESC(pRxQueue,iIndex);
 				//break;
-				//EdrvClearGpio(2);
+
 			}
+			EdrvClearGpio(3);
 		}
+
 	}
 
 	//Process Tx
-	if ((pTxQueue != NULL) && (dwReg & EDRV_INTR_ICR_TXDW))
+	if ((pTxQueue != NULL))// && (dwReg & EDRV_INTR_ICR_TXDW))
 	{
 		EDRV_COUNT_TX;
 		//printk("Tx \n");
-		dwReg &= ~EDRV_INTR_ICR_TXDW;
+	//	dwReg &= ~EDRV_INTR_ICR_TXDW;
 		//EDRV_REGDW_WRITE(EDRV_INTR_SET_REG,dwReg);
 
-		while(pTxQueue->m_iNextWb != pTxQueue->m_iNextDesc)
+		do
 		{
 			#ifdef QAV_MODE
 			tEdrvTtxDesc		*pTtxDesc;
 			#endif
 			tEdrvAdvTxDesc*    pAdvTxDesc;
-
+			EdrvSetGpio(2);
 			EDRV_COUNT_TX_TEST;
 			iIndex = 0;
 //#ifdef QAV_MODE
@@ -1389,7 +1463,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 			#else
 			pAdvTxDesc = EDRV_GET_TX_DESC(pTxQueue,iIndex);
 			#endif
-
+			EdrvClearGpio(2);
 			if(pAdvTxDesc->m_sWb.m_le_dwstatus & EDRV_TDESC_STATUS_DD)
 			{
 				//printk("Tx\n");
@@ -1402,47 +1476,35 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 				pAdvTxDesc->m_sWb.m_le_dwstatus = 0;
 				pTxBuffer = pTxQueue->m_apTxBuffer[iIndex];
 				pTxQueue->m_apTxBuffer[iIndex] = NULL;
-				EdrvSetGpio(2);
-			//	if(pTxBuffer->m_pbBuffer[20] == 1)
-			//	{
-			//		TgtDbgSignalTracePoint(26);
-			//	}
-							//	Sec = (0xFFFFFFFF & pAdvTxDesc->m_sWb.m_le_qwTimeStamp);
-							//	Lat = Sec - pTxBuffer->m_qwLaunchTime ;
-								//EdrvGetTxTimeStamp(&Lat);
-							//	printk("Type :%d (%lld - %lld) %lld\n ",pTxBuffer->m_pbBuffer[14],Sec,pTxBuffer->m_qwLaunchTime,Lat);
-								//printk("Type %d\n",pTxQueue->m_PktBuff[iIndex].m_VirtAddr[14]);
-				//dma_unmap_single(&EdrvInstance_l.m_pPciDev->dev,\
-								 pTxQueue->m_PktBuff[iIndex].m_DmaAddr,\
-								 pTxQueue->m_PktBuff[iIndex].m_uilen, \
-								 DMA_TO_DEVICE);
+
+				dma_unmap_single(&EdrvInstance_l.m_pPciDev->dev,\
+												 pTxQueue->m_PktBuff[iIndex].m_DmaAddr,\
+												 pTxQueue->m_PktBuff[iIndex].m_uilen, \
+												 DMA_TO_DEVICE);
+								//EDRV_COUNT_TX;
+				if (pTxBuffer != NULL)
+				{
+					 // Call Tx handler of Data link layer
+					if (pTxBuffer->m_pfnTxHandler != NULL)
+					{
+							pTxBuffer->m_pfnTxHandler(pTxBuffer);
+					}
+				}
+				else
+				{
+					printk("error\n");
+					EDRV_COUNT_TX_FUN;
+				}
+								//break;
+
+
 #ifdef QAV_MODE
 				iIndex =((iIndex + 1) & EDRV_MAX_TTX_DESC_LEN);
 #else
 				iIndex =((iIndex + 1) & EDRV_MAX_TX_DESC_LEN);
 #endif
-								pTxQueue->m_iNextWb = iIndex;
-
-
-								//EDRV_COUNT_TX;
-								if (pTxBuffer != NULL)
-								{
-									 // Call Tx handler of Data link layer
-									if (pTxBuffer->m_pfnTxHandler != NULL)
-									{
-										pTxBuffer->m_pfnTxHandler(pTxBuffer);
-									}
-								}
-								else
-								{
-									EDRV_COUNT_TX_FUN;
-								}
-								//break;
-				dma_unmap_single(&EdrvInstance_l.m_pPciDev->dev,\
-								 pTxQueue->m_PktBuff[iIndex].m_DmaAddr,\
-								 pTxQueue->m_PktBuff[iIndex].m_uilen, \
-								 DMA_TO_DEVICE);
-				EdrvClearGpio(2);
+				pTxQueue->m_iNextWb = iIndex;
+				//EdrvClearGpio(3);
 			}
 			else
 			{
@@ -1450,10 +1512,11 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 				//printk("No packet\n");
 				break;
 			}
-		}
+
+		}while(pTxQueue->m_iNextWb != pTxQueue->m_iNextDesc);
 	}
 
-	EDRV_REGDW_WRITE(EDRV_INTR_SET_REG,dwReg);
+//	EDRV_REGDW_WRITE(EDRV_INTR_SET_REG,dwReg);
 Exit:
 	return iHandled;
 }
@@ -2521,7 +2584,7 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	EdrvInstance_l.m_NumQVectors = EDRV_MAX_QUEUE_VECTOR;
 
 	//Initialise the SYSTIM timer with current system time
-	EDRV_REGDW_WRITE(EDRV_TSAUXC_REG, 0x0);
+	EDRV_REGDW_WRITE(EDRV_TSAUXC, 0x0);
 	sSysTime = ktime_to_timespec(ktime_get_real());
 	EdrvPtpWrite(&sSysTime);
 
@@ -2648,7 +2711,7 @@ static int EdrvInitOne(struct pci_dev *pPciDev,
 	// initialize Multicast Table Array to 0
 	for (iIndex = 0; iIndex < 128; iIndex++)
 	{
-	    EDRV_REGDW_WRITE(EDRV_REGDW_MTA(iIndex), 0);
+	    EDRV_REGDW_WRITE(EDRV_MTA(iIndex), 0);
 	}
 	// Alloc Rx Queue here
 
@@ -2832,6 +2895,22 @@ static void EdrvRemoveOne(struct pci_dev *pPciDev)
 	EDRV_REGDW_WRITE(EDRV_INTR_MASK_CLEAR,~0);
 	EDRV_REGDW_WRITE(EDRV_INTR_ACK_AUTO_MASK, 0);
 
+	dwReg = EDRV_REGDW_READ(EDRV_INTR_READ_REG);
+
+	if(EdrvInstance_l.m_pMsixEntry)
+	{
+	  iVector = 0;
+	  free_irq(EdrvInstance_l.m_pMsixEntry[iVector].vector, pPciDev);
+	  iVector++;
+	  for(iIndex = 0; iIndex < EdrvInstance_l.m_NumQVectors;iIndex++)
+	  {
+		  free_irq(EdrvInstance_l.m_pMsixEntry[iVector].vector, EdrvInstance_l.m_pQvector[iIndex]);
+		  iVector++;
+	  }
+	  pci_disable_msix(pPciDev);
+	  kfree(EdrvInstance_l.m_pMsixEntry);
+
+	}
 	// Disable Tx
 	dwReg = EDRV_REGDW_READ(EDRV_TCTL_REG);
 	dwReg &= ~EDRV_TCTL_EN;
@@ -2846,7 +2925,7 @@ static void EdrvRemoveOne(struct pci_dev *pPciDev)
 
 	EDRV_REGDW_READ(EDRV_STATUS_REG);
 
-	usleep_range(10000, 20000);
+	msleep(10);
 
 	dwReg = EDRV_REGDW_READ(EDRV_TCTL_REG);
 	dwReg &= ~EDRV_TCTL_SWFLSH;
@@ -2881,20 +2960,7 @@ static void EdrvRemoveOne(struct pci_dev *pPciDev)
 	dwReg = EDRV_REGDW_READ(EDRV_CTRL_EXTN_REG);
 	dwReg &= ~EDRV_CTRL_EXTN_DRV_LOAD;
 	EDRV_REGDW_WRITE(EDRV_CTRL_EXTN_REG,dwReg);
-	if(EdrvInstance_l.m_pMsixEntry)
-	{
-	  iVector = 0;
-	  free_irq(EdrvInstance_l.m_pMsixEntry[iVector].vector, pPciDev);
-	  iVector++;
-	  for(iIndex = 0; iIndex < EdrvInstance_l.m_NumQVectors;iIndex++)
-	  {
-		  free_irq(EdrvInstance_l.m_pMsixEntry[iVector].vector, EdrvInstance_l.m_pQvector[iIndex]);
-		  iVector++;
-	  }
-	  pci_disable_msix(pPciDev);
-	  kfree(EdrvInstance_l.m_pMsixEntry);
 
-	  }
 	//free_irq(EdrvInstance_l.m_iIrq, pPciDev);
 	//pci_disable_msi(pPciDev);
 
@@ -2927,12 +2993,6 @@ Exit:
 }
 void EdrvSetCyclicFrequency(DWORD dwOffset)
 {
-	struct timespec ts;
-	EdrvPtpRead(&ts);
-	ts.tv_nsec = ts.tv_nsec + dwOffset;
-	EDRV_REGDW_WRITE(EDRV_TRGTTIML0, ts.tv_nsec);
-	EDRV_REGDW_WRITE(EDRV_TRGTTIMH0, ts.tv_sec);
-
 	//printk("TIme nsec %d sec %d\n",ts.tv_nsec,ts.tv_sec);
 	EDRV_REGDW_WRITE(EDRV_FREQOUT0,dwOffset);
 }
@@ -2940,7 +3000,7 @@ tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p,DWORD dwOffset)
 {
 	tEplKernel EplRet =  kEplSuccessful;
 	unsigned int dwReg;
-
+	struct timespec ts;
 	if(NULL == pTimerHdl_p)
 	{
 		printk("Error Timer\n");
@@ -2954,6 +3014,10 @@ tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p,DWORD dwOffset)
 	dwReg |= ( EDRV_TSSDP_TS_SDP0_SEL_CLK0 | EDRV_TSSDP_TS_SDP0_EN);
 	EDRV_REGDW_WRITE(EDRV_TSSDP,dwReg);
 
+	EdrvPtpRead(&ts);
+	ts.tv_nsec = ts.tv_nsec + dwOffset;
+	EDRV_REGDW_WRITE(EDRV_TRGTTIML0, ts.tv_nsec);
+	EDRV_REGDW_WRITE(EDRV_TRGTTIMH0, ts.tv_sec);
 
 	EdrvSetCyclicFrequency(dwOffset);
 
