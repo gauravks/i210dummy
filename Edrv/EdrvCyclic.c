@@ -123,7 +123,6 @@ typedef struct
     tEdrvCyclicCbSync   m_pfnCbSync;
     tEdrvCyclicCbError  m_pfnCbError;
 #ifdef EDRVI210
-    //TODO: Set in conditional compilation
     unsigned long long  m_ullNextCycleTime;
     BOOL                m_fNextCycleValid;
     QWORD               m_aTxProcFlt[8];

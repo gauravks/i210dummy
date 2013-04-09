@@ -1,6 +1,6 @@
 /****************************************************************************
 
-    Copyright (c) 2012 Kalycito Infotech Private Limited
+    Copyright (c) 2013 Kalycito Infotech Private Limited
 
     Project: openPOWERLINK
 
@@ -137,49 +137,48 @@ void EplTimerHighReskCallback (tEplTimerHdl* pTimerHdl_p);
 //                                                                         //
 //=========================================================================//
 
+//------------------------------------------------------------------------------
+/**
+\brief EplTimerHighReskInit()
+	   initializes the high resolution timer module.
 
-//---------------------------------------------------------------------------
-//
-// Function:    EplTimerHighReskInit()
-//
-// Description: initializes the high resolution timer module.
-//
-// Parameters:  void
-//
-// Return:      tEplKernel      = error code
-//
-// State:       not tested
-//
-//---------------------------------------------------------------------------
+\param void
+
+\return tEplKernel
+
+\retval error code
+
+*/
+//------------------------------------------------------------------------------
+
 
 tEplKernel PUBLIC EplTimerHighReskInit(void)
 {
-tEplKernel  Ret;
+	tEplKernel  Ret;
 
     Ret = EplTimerHighReskAddInstance();
 
     return Ret;
 
 }
+//------------------------------------------------------------------------------
+/**
+\brief EplTimerHighReskAddInstance()
+	   initializes the high resolution timer module.
 
-//---------------------------------------------------------------------------
-//
-// Function:    EplTimerHighReskAddInstance()
-//
-// Description: initializes the high resolution timer module.
-//
-// Parameters:  void
-//
-// Return:      tEplKernel      = error code
-//
-// State:       not tested
-//
-//---------------------------------------------------------------------------
+\param void
+
+\return tEplKernel
+
+\retval error code
+
+*/
+//------------------------------------------------------------------------------
 
 tEplKernel PUBLIC EplTimerHighReskAddInstance(void)
 {
-tEplKernel                   Ret;
-unsigned int                 uiIndex;
+	tEplKernel                   Ret;
+	unsigned int                 uiIndex;
 
     Ret = kEplSuccessful;
 
@@ -187,25 +186,25 @@ unsigned int                 uiIndex;
 
     return Ret;
 }
-//---------------------------------------------------------------------------
-//
-// Function:    EplTimerHighReskDelInstance()
-//
-// Description: shuts down the high resolution timer module.
-//
-// Parameters:  void
-//
-// Return:      tEplKernel      = error code
-//
-// State:       not tested
-//
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+/**
+\brief 		EplTimerHighReskDelInstance()
+	   	   	initializes the high resolution timer module.
+
+\param 		void
+
+\return 	tEplKernel
+
+\retval 	error code
+
+*/
+//------------------------------------------------------------------------------
 
 tEplKernel PUBLIC EplTimerHighReskDelInstance(void)
 {
-tEplTimerHighReskTimerInfo*  pTimerInfo;
-tEplKernel                   Ret;
-unsigned int                 uiIndex;
+	tEplTimerHighReskTimerInfo*  pTimerInfo;
+	tEplKernel                   Ret;
+	unsigned int                 uiIndex;
 
     Ret = kEplSuccessful;
 
@@ -226,36 +225,37 @@ unsigned int                 uiIndex;
     return Ret;
 
 }
-//---------------------------------------------------------------------------
-//
-// Function:    EplTimerHighReskModifyTimerNs()
-//
-// Description: modifies the timeout of the timer with the specified handle.
-//              If the handle the pointer points to is zero, the timer must
-//              be created first.
-//              If it is not possible to stop the old timer,
-//              this function always assures that the old timer does not
-//              trigger the callback function with the same handle as the new
-//              timer. That means the callback function must check the passed
-//              handle with the one returned by this function. If these are
-//              unequal, the call can be discarded.
-//
-// Parameters:  pTimerHdl_p     = pointer to timer handle
-//              ullTimeNs_p     = relative timeout in [ns]
-//              pfnCallback_p   = callback function, which is called mutual
-//                                exclusive with the Edrv callback functions
-//                                (Rx and Tx).
-//              ulArgument_p    = user-specific argument
-//              fContinuously_p = if TRUE, callback function will be called
-//                                continuously;
-//                                otherwise, it is a oneshot timer.
-//
-// Return:      tEplKernel      = error code
-//
-// State:       not tested
-//
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+/**
+\brief 		EplTimerHighReskModifyTimerNs()
 
+	   	   	 modifies the timeout of the timer with the specified handle.
+          	 If the handle the pointer points to is zero, the timer must
+             be created first.
+             If it is not possible to stop the old timer,
+             this function always assures that the old timer does not
+             trigger the callback function with the same handle as the new
+             timer. That means the callback function must check the passed
+          	 handle with the one returned by this function. If these are
+          	 unequal, the call can be discarded.
+
+\param 		pTimerHdl_p   	pointer to timer handle
+\param 		ullTimeNs_p   	relative timeout in [ns]
+\param		pfnCallback_p 	callback function, which is called mutual
+                          	exclusive with the Edrv callback functions
+                          	(Rx and Tx).
+\param		ulArgument_p  	user-specific argument
+\param		fContinuously_p if TRUE, callback function will be called
+                          	continuously;
+                            otherwise, it is a oneshot timer.
+
+
+\return 	tEplKernel
+
+\retval 	error code
+
+*/
+//------------------------------------------------------------------------------
 tEplKernel PUBLIC EplTimerHighReskModifyTimerNs(tEplTimerHdl*     pTimerHdl_p,
                                     unsigned long long  ullTimeNs_p,
                                     tEplTimerkCallback  pfnCallback_p,
@@ -268,7 +268,7 @@ tEplKernel PUBLIC EplTimerHighReskModifyTimerNs(tEplTimerHdl*     pTimerHdl_p,
 	DWORD						 dwTimerFreq;
 
     Ret = kEplSuccessful;
-    //printk("Time%lld\n",ullTimeNs_p);
+
     // check pointer to handle
     if(pTimerHdl_p == NULL)
     {
@@ -344,35 +344,31 @@ tEplKernel PUBLIC EplTimerHighReskModifyTimerNs(tEplTimerHdl*     pTimerHdl_p,
     {
     	goto Exit;
     }
-    // Timer Frequency = 2 * Cycletime
+
     dwTimerFreq = (DWORD)(ullTimeNs_p);
 
-    // Set the Frequency
-    //EdrvSetCyclicFrequency();
+     // Start the Timer
 
-    // Start the Timer
-    //printk(" Start Timer %x freq %d\n",pTimerInfo->m_EventArg.m_TimerHdl,dwTimerFreq);
     Ret = EdrvStartTimer(&pTimerInfo->m_EventArg.m_TimerHdl,dwTimerFreq);
 
 Exit:
     return Ret;
 
 }
+//------------------------------------------------------------------------------
+/**
+\brief 		EplTimerHighReskDeleteTimer()
+	   	   	deletes the timer with the specified handle. Afterward the
+			handle is set to zero.
 
-//---------------------------------------------------------------------------
-//
-// Function:    EplTimerHighReskDeleteTimer()
-//
-// Description: deletes the timer with the specified handle. Afterward the
-//              handle is set to zero.
-//
-// Parameters:  pTimerHdl_p     = pointer to timer handle
-//
-// Return:      tEplKernel      = error code
-//
-// State:       not tested
-//
-//---------------------------------------------------------------------------
+\param 		pTimerHdl_p    pointer to timer handle
+
+\return 	tEplKernel
+
+\retval 	error code
+
+*/
+//------------------------------------------------------------------------------
 
 tEplKernel PUBLIC EplTimerHighReskDeleteTimer(tEplTimerHdl* pTimerHdl_p)
 {
@@ -381,7 +377,7 @@ tEplKernel PUBLIC EplTimerHighReskDeleteTimer(tEplTimerHdl* pTimerHdl_p)
 	tEplTimerHighReskTimerInfo* pTimerInfo;
 
 	// check pointer to handle
-	//printk("Delete %x\n",*pTimerHdl_p);
+
 	    if(pTimerHdl_p == NULL)
 	    {
 	        Ret = kEplTimerInvalidHandle;
@@ -417,19 +413,17 @@ Exit:
     return Ret;
 
 }
-//---------------------------------------------------------------------------
-//
-// Function:    EplTimerHighReskCallback()
-//
-// Description: Callback function commonly used for all timers.
-//
-// Parameters:  pTimer_p = pointer to hrtimer
-//
-// Return:
-//
-// State:       not tested
-//
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+/**
+\brief 		EplTimerHighReskCallback()
+	   	   	Callback function commonly used for all timers.
+
+\param 		pTimer_p 	pointer to hrtimer
+
+\return 	void
+
+*/
+//------------------------------------------------------------------------------
 
 void EplTimerHighReskCallback (tEplTimerHdl* pTimerHdl_p)
 {
@@ -440,7 +434,7 @@ void EplTimerHighReskCallback (tEplTimerHdl* pTimerHdl_p)
 #ifdef USE_COMP
 	unsigned int				 iOffset;
 #endif
-//printk("CB %X\n",*pTimerHdl_p);
+
 	uiIndex    = HDL_TO_IDX(*pTimerHdl_p);
 	if (uiIndex >= TIMER_COUNT)
 	{   // invalid handle
@@ -456,7 +450,7 @@ void EplTimerHighReskCallback (tEplTimerHdl* pTimerHdl_p)
 
 	if (pTimerInfo->m_pfnCallback != NULL)
 	{
-		//printk("Call\n");
+
 		pTimerInfo->m_pfnCallback(&pTimerInfo->m_EventArg);
 	}
 
@@ -469,7 +463,7 @@ void EplTimerHighReskCallback (tEplTimerHdl* pTimerHdl_p)
 #endif
 	if(pTimerInfo->m_fContinuously)
 	{
-			//printk("Enable\n");
+
 #ifdef USE_COMP
 			EdrvSetCyclicFrequency(iOffset);
 #endif
@@ -477,7 +471,7 @@ void EplTimerHighReskCallback (tEplTimerHdl* pTimerHdl_p)
 	}
 	else
 	{
-		//printk("Stop\n");
+
 		EdrvStopTimer(pTimerHdl_p);
 	}
 Exit:
