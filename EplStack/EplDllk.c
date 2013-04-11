@@ -750,14 +750,16 @@ tEplNmtState    NmtState;
 
         case kEplEventTypeDllkCycleFinish:
         {
-        	Ret = EplDllkProcessCycleFinish(EplDllkInstance_g.m_NmtState);
+
+            Ret = EplDllkProcessCycleFinish(EplDllkInstance_g.m_NmtState);
 
             break;
         }
 
         case kEplEventTypeSync:
         {
-        	Ret = EplDllkProcessSync(EplDllkInstance_g.m_NmtState);
+
+            Ret = EplDllkProcessSync(EplDllkInstance_g.m_NmtState);
 
             break;
         }
@@ -1599,7 +1601,6 @@ tEplDllkNodeInfo*   pIntNodeInfo;
         goto Exit;
     }
     // mark Tx buffer as empty
-    //printk("Handle:%d\n",uiHandle);
     EplDllkInstance_g.m_pTxBuffer[uiHandle].m_uiTxMsgLen = EPL_DLLK_BUFLEN_EMPTY;
     EplDllkInstance_g.m_pTxBuffer[uiHandle].m_pfnTxHandler = EplDllkCbTransmittedNmtReq;
     uiHandle++;
@@ -2519,7 +2520,8 @@ tEplNmtState    NmtState;
 #if (EPL_DLL_PROCESS_SYNC == EPL_DLL_PROCESS_SYNC_ON_SOA)
             if (EplDllkInstance_g.m_DllState != kEplDllGsInit)
             {   // cyclic state is active, so preprocessing is necessary
-            	Ret = EplDllkProcessSync(NmtState);
+
+                Ret = EplDllkProcessSync(NmtState);
             }
 //            BENCHMARK_MOD_02_TOGGLE(7);
 #endif
@@ -2612,7 +2614,7 @@ tEdrvTxBuffer*  pTxBuffer;
     {
         if (EplDllkInstance_g.m_DllConfigParam.m_uiSyncNodeId == EPL_C_ADR_SYNC_ON_SOC)
         {   // cyclic state is active, so preprocessing is necessary
-        	//printk("Sync\n");
+
             Ret = EplDllkProcessSync(NmtState_p);
         }
     }
@@ -2647,9 +2649,7 @@ tEplFrame*      pTxFrame;
 tEdrvTxBuffer*  pTxBuffer;
 tEplFrameInfo   FrameInfo;
 unsigned int    uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetCycle ^ 1;
-//printk("%s\n",__FUNCTION__);
-//TgtDbgSignalTracePoint(24);
-//EdrvSetGpio(3);
+
     if (EplDllkInstance_g.m_pfnCbSync != NULL)
     {
         Ret = EplDllkInstance_g.m_pfnCbSync();
@@ -2947,7 +2947,6 @@ unsigned int    uiNextTxBufferOffset = EplDllkInstance_g.m_bCurTxBufferOffsetCyc
     }
 
 Exit:
-//EdrvClearGpio(3);
     return Ret;
 }
 //---------------------------------------------------------------------------
@@ -3926,7 +3925,6 @@ tEplFrame*              pFrame;
 tEplFrameInfo           FrameInfo;
 tEplMsgType             MsgType;
 
-//printk("%s\n",__FUNCTION__);
 TGT_DLLK_DECLARE_FLAGS
 
     TGT_DLLK_ENTER_CRITICAL_SECTION();
@@ -3936,7 +3934,7 @@ TGT_DLLK_DECLARE_FLAGS
 
     if (NmtState <= kEplNmtGsResetConfiguration)
     {
-       goto Exit;
+        goto Exit;
     }
 
     pFrame = (tEplFrame *) pRxBuffer_p->m_pbBuffer;
@@ -4283,7 +4281,7 @@ unsigned int    uiNodeId;
 #if EPL_NMT_MAX_NODE_ID > 0
 tEplDllkNodeInfo*   pIntNodeInfo = NULL;
 #endif
-//printk("%s\n",__FUNCTION__);
+
     pFrame = pFrameInfo_p->m_pFrame;
 
     // PRes frame
@@ -5065,7 +5063,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplFrame*      pFrame;
 unsigned int    uiAsndServiceId;
 unsigned int    uiNodeId;
-//printk("%s\n",__FUNCTION__);
+
     UNUSED_PARAMETER(NmtState_p);
 #if EPL_DLL_PRES_CHAINING_CN == FALSE
     UNUSED_PARAMETER(pRxBuffer_p);
@@ -5236,7 +5234,7 @@ tEplDllAsyncReqPriority Priority;
 tEplNmtState    NmtState;
 unsigned int    uiHandle = EPL_DLLK_TXFRAME_NMTREQ;
 TGT_DLLK_DECLARE_FLAGS
-//printk("%s\n",__FUNCTION__);
+
     TGT_DLLK_ENTER_CRITICAL_SECTION();
 
     NmtState = EplDllkInstance_g.m_NmtState;
@@ -5492,7 +5490,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplNmtState    NmtState;
 unsigned int    uiHandle = EPL_DLLK_TXFRAME_SOA;
 TGT_DLLK_DECLARE_FLAGS
-//printk("%s\n",__FUNCTION__);
+
     UNUSED_PARAMETER(pTxBuffer_p);
 
     TGT_DLLK_ENTER_CRITICAL_SECTION();
@@ -5631,7 +5629,6 @@ TGT_DLLK_DECLARE_FLAGS
         && (EplDllkInstance_g.m_fSyncProcessed == FALSE))
     {   // cyclic state is active, so preprocessing is necessary
         EplDllkInstance_g.m_fSyncProcessed = TRUE;
-        //printk("S\n");
         Ret = EplDllkPostEvent(kEplEventTypeSync);
         if (Ret != kEplSuccessful)
         {
@@ -5684,7 +5681,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplNmtState    NmtState;
 unsigned int    uiHandle = EPL_DLLK_TXFRAME_SOC;
 TGT_DLLK_DECLARE_FLAGS
-//printk("%s\n",__FUNCTION__);
+
     UNUSED_PARAMETER(pTxBuffer_p);
 
     TGT_DLLK_ENTER_CRITICAL_SECTION();
@@ -5949,7 +5946,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplFrame*      pTxFrame;
 
     pTxFrame = (tEplFrame *) pTxBuffer_p->m_pbBuffer;
-  //  printk("%s \n",__FUNCTION__);
+
     // update frame (NMT state, RD, RS, PR flags)
     AmiSetByteToLe(&pTxFrame->m_Data.m_Asnd.m_Payload.m_IdentResponse.m_le_bNmtStatus, (BYTE) NmtState_p);
     AmiSetByteToLe(&pTxFrame->m_Data.m_Asnd.m_Payload.m_IdentResponse.m_le_bFlag2, EplDllkInstance_g.m_bFlag2);
@@ -7366,7 +7363,7 @@ static tEplKernel EplDllkUpdateFrameSoa(tEdrvTxBuffer* pTxBuffer_p, tEplNmtState
 tEplKernel          Ret = kEplSuccessful;
 tEplFrame*          pTxFrame;
 tEplDllkNodeInfo*   pNodeInfo;
-//printk("%s\n",__FUNCTION__);
+
     pTxFrame = (tEplFrame *) pTxBuffer_p->m_pbBuffer;
 
     if (fEnableInvitation_p != FALSE)

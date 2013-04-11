@@ -911,7 +911,6 @@ unsigned int    uiNrOfPages;
                 uiNrOfPages, fOut_p, 0, ppPage_p,
                 NULL);
         up_read(&current->mm->mmap_sem);
-
         if (iRet != uiNrOfPages)
         {
             PRINTF("%s: get_user_pages(%p, %u, %d, %p) returned %d\n",

@@ -92,7 +92,6 @@
 
 // use no FIFOs, make direct calls
 //#define EPL_USE_SHAREDBUFF   FALSE
-//#define EPL_EVENT_USE_KERNEL_QUEUE          FALSE
 
 #ifndef BENCHMARK_MODULES
 #define BENCHMARK_MODULES       0 //0xEE800042L
@@ -179,13 +178,13 @@
 
 //#ifdef CONFIG_CFM
 // activate PResChaining support on MN
-#define EPL_DLL_PRES_CHAINING_MN        FALSE
+#define EPL_DLL_PRES_CHAINING_MN        TRUE
 //#endif
 
-//#if (CONFIG_EDRV == 8139) || (CONFIG_EDRV == 8255)
+#if (CONFIG_EDRV == 8139) || (CONFIG_EDRV == 8255)
 // Disable deferred release of rx-buffers until Edrv8139 supports it
 #define EPL_DLL_DISABLE_DEFERRED_RXFRAME_RELEASE    TRUE
-//#endif
+#endif
 
 // =========================================================================
 // OBD specific defines

@@ -485,7 +485,6 @@ unsigned long   ulFrameCount;
     *pPriority_p = kEplDllAsyncReqPrioGeneric;
     *puiCount_p = (unsigned int) ulFrameCount;
 
-  //  printk("Nmt: %d Gen: %d\n",EplDllkCalInstance_g.m_Statistics.m_ulMaxTxFrameCountNmt,EplDllkCalInstance_g.m_Statistics.m_ulMaxTxFrameCountGen);
 Exit:
 #else
     if (EplDllkCalInstance_g.m_uiFrameSizeNmt > 0)
@@ -648,7 +647,7 @@ tEplKernel  Ret = kEplSuccessful;
 tEplEvent       Event;
 #if EPL_USE_SHAREDBUFF != FALSE
 tShbError   ShbError;
-//printk("%s\n",__FUNCTION__);
+
     switch (Priority_p)
     {
         case kEplDllAsyncReqPrioNmt:    // NMT request priority
@@ -876,7 +875,7 @@ tShbError   ShbError;
 tEplKernel EplDllkCalIssueRequest(tEplDllReqServiceId Service_p, unsigned int uiNodeId_p, BYTE bSoaFlag1_p)
 {
 tEplKernel  Ret = kEplSuccessful;
-//printk("%s N:%d\n",__FUNCTION__,uiNodeId_p);
+
     if (bSoaFlag1_p != 0xFF)
     {
         Ret = EplDllkSetFlag1OfNode(uiNodeId_p, bSoaFlag1_p);
@@ -894,7 +893,6 @@ tEplKernel  Ret = kEplSuccessful;
             if (((EplDllkCalInstance_g.m_uiWriteIdentReq + 1) % tabentries (EplDllkCalInstance_g.m_auiQueueIdentReq))
                 == EplDllkCalInstance_g.m_uiReadIdentReq)
             {   // queue is full
-            	//printk("Buffer Full\n");
                 Ret = kEplDllAsyncTxBufferFull;
                 goto Exit;
             }
@@ -958,7 +956,7 @@ unsigned int    uiCount;
 #if EPL_DLL_PRES_CHAINING_MN == FALSE
     UNUSED_PARAMETER(pSoaPayload_p);
 #endif
-    //printk("%s\n",__FUNCTION__);
+
     for (uiCount = EPL_DLLKCAL_MAX_QUEUES; uiCount > 0; uiCount--)
     {
         switch (EplDllkCalInstance_g.m_uiNextRequestQueue)
@@ -1032,11 +1030,9 @@ unsigned int    uiCount;
             case 3:
             {   // MnIdentReq
                 // next queue will be MnStatusReq queue
-
                 EplDllkCalInstance_g.m_uiNextRequestQueue = 4;
                 if (EplDllkCalInstance_g.m_uiReadIdentReq != EplDllkCalInstance_g.m_uiWriteIdentReq)
                 {   // queue is not empty
-                	//printk("IdentReq\n");
                     *puiNodeId_p = EplDllkCalInstance_g.m_auiQueueIdentReq[EplDllkCalInstance_g.m_uiReadIdentReq];
                     EplDllkCalInstance_g.m_uiReadIdentReq =
                         (EplDllkCalInstance_g.m_uiReadIdentReq + 1) % tabentries (EplDllkCalInstance_g.m_auiQueueIdentReq);
