@@ -564,7 +564,6 @@ static void PUBLIC EplTimeruCbMs(ULONG ulParameter_p)
                sizeof (TimerEventArg.m_Arg));
 
     EplEvent.m_EventSink = pData->TimerArgument.m_EventSink;
-    printk("3: %s \n",__FUNCTION__);
     EplEvent.m_EventType = kEplEventTypeTimer;
     EPL_MEMSET(&EplEvent.m_NetTime, 0x00, sizeof(tEplNetTime));
     EplEvent.m_pArg = &TimerEventArg;

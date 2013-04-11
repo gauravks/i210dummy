@@ -115,7 +115,7 @@
 #endif
 
 #ifndef DBG_TRACE_POINTS
-#define DBG_TRACE_POINTS    27  // # of supported debug trace points
+#define DBG_TRACE_POINTS    23  // # of supported debug trace points
 #endif
 
 #ifndef DBG_TRACE_VALUES

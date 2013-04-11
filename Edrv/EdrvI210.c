@@ -648,12 +648,18 @@ tEplKernel EdrvInit(tEdrvInitParam * pEdrvInitParam_p)
 	iResult = pci_register_driver (&EdrvDriver);
 	if(0 != iResult)
 	{
-		printk("%s pci_register_driver failed with %d\n", __FUNCTION__, iResult);
-		Ret = EdrvShutdown();
+	    printk("%s pci_register_driver failed with %d\n", __FUNCTION__, iResult);
 	    Ret = kEplNoResource;
 	    goto Exit;
 	}
-	printk("Done!!!\n");
+	
+	if (EdrvInstance_l.m_pPciDev == NULL)
+    	{
+             printk("%s m_pPciDev=NULL\n", __FUNCTION__);
+             Ret = EdrvShutdown();
+             Ret = kEplNoResource;
+             goto Exit;
+    	}
 
 	// local MAC address might have been changed in EdrvInitOne
 	EPL_MEMCPY(pEdrvInitParam_p->m_abMyMacAddr, EdrvInstance_l.m_InitParam.m_abMyMacAddr, 6);
@@ -995,12 +1001,10 @@ tEplKernel EdrvSendTxMsg (tEdrvTxBuffer * pTxBuffer_p)
 	tEplKernel      	Ret = kEplSuccessful;
 
 	unsigned int    	uiBufferNumber;
-	tEdrvAdvTxDesc		*pTxAdvDesc;
 	tEdrvQueue			*pTxQueue;
 	INT					iQueue = 0,iIndex = 0;
 	dma_addr_t 			TxDma;
 	tEdrvTtxDesc		*pTtxDesc;
-	QWORD				qwCurtime;
 	QWORD				qwLaunchTime,qwTime;
 
 	uiBufferNumber = pTxBuffer_p->m_BufferNumber.m_dwVal;
@@ -1037,7 +1041,7 @@ tEplKernel EdrvSendTxMsg (tEdrvTxBuffer * pTxBuffer_p)
 	// Set descriptor type
 	pTtxDesc->m_CtxtDesc.m_dwTucmdType = (EDRV_TDESC_CMD_DEXT | EDRV_TDESC_DTYP_CTXT) ;
 
-	TxDma = dma_map_single(&EdrvInstance_l.m_pPciDev->dev),\
+	TxDma = dma_map_single(&EdrvInstance_l.m_pPciDev->dev,\
 		   	   	   	  	  pTxBuffer_p->m_pbBuffer,\
 		   	   	   	  	  pTxBuffer_p->m_uiTxMsgLen,DMA_TO_DEVICE );
 
@@ -1053,7 +1057,7 @@ tEplKernel EdrvSendTxMsg (tEdrvTxBuffer * pTxBuffer_p)
 	EDRV_COUNT_SEND;
 	// Store Dma address, length and virtual address for reference
 	pTxQueue->m_PktBuff[iIndex].m_DmaAddr = TxDma;
-	pTxQueue->m_PktBuff[iIndex].m_VirtAddr = pTxBuffer_p->m_pbBuffer;
+	pTxQueue->m_PktBuff[iIndex].m_pVirtAddr = pTxBuffer_p->m_pbBuffer;
 	pTxQueue->m_PktBuff[iIndex].m_uilen = pTxBuffer_p->m_uiTxMsgLen;
 
 	pTtxDesc->m_Adv_desc.m_sRead.m_le_qwBufferAddr = cpu_to_le64(TxDma);
@@ -1118,9 +1122,6 @@ static irqreturn_t EdrvOtherInterrupt (int iIrqNum, void *pInstData)
 	DWORD        dwStatus;
 	DWORD		 dwReg;
 	INT          iHandled = IRQ_HANDLED;
-	INT			 iIndex;
-
-
 
 	if(pInstData != EdrvInstance_l.m_pPciDev)
 	{
@@ -1173,7 +1174,6 @@ static irqreturn_t TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p)
 static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRegs_p)
 #endif
 {
-	DWORD           dwStatus;
 	DWORD			dwReg;
 	int             iHandled;
 	INT				iIndex;
@@ -1225,7 +1225,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 				RxBuffer.m_BufferInFrame = kEdrvBufferLastInFrame;
 				uiRcvLen = (0x0000FFFF & pAdvRxDesc->sWb.m_dwLenVlanTag);
 				RxBuffer.m_uiRxMsgLen = uiRcvLen;
-				RxBuffer.m_pbBuffer = (BYTE *)pRxQueue->m_PktBuff[iIndex].m_VirtAddr;
+				RxBuffer.m_pbBuffer = (BYTE *)pRxQueue->m_PktBuff[iIndex].m_pVirtAddr;
 
 				EDRV_COUNT_RX;
 
@@ -1280,7 +1280,6 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 				// Process the send packet
 				tEdrvTxBuffer*  pTxBuffer;
 				DWORD           dwTxStatus;
-				QWORD 			Lat,Sec;
 
 				dwTxStatus = pAdvTxDesc->m_sWb.m_le_dwstatus;
 				pAdvTxDesc->m_sWb.m_le_dwstatus = 0;
@@ -1981,7 +1980,7 @@ static tEplKernel EdrvAllocRxBuffer(tEdrvQueue *pRxQueue_p)
 	    	goto Exit;
 	    }
 	    pRxQueue_p->m_PktBuff[iIndex].m_DmaAddr = RxDma;
-	    pRxQueue_p->m_PktBuff[iIndex].m_VirtAddr = (pRxQueue_p->m_pbBuf + (iIndex * EDRV_MAX_FRAME_SIZE));
+	    pRxQueue_p->m_PktBuff[iIndex].m_pVirtAddr = (pRxQueue_p->m_pbBuf + (iIndex * EDRV_MAX_FRAME_SIZE));
 	    RxDesc->sRead.m_le_qwBufferAddr = cpu_to_le64(RxDma);
 
 	    EDRV_REGDW_WRITE(EDRV_RDTAIL(pRxQueue_p->m_iIndex),iIndex);
@@ -2075,8 +2074,8 @@ static void EdrvInitQavMode( void )
 {
 	DWORD	  dwTqavctrl;
 	DWORD	  dwLaunchOff;
-	DWORD	  dwTqavcc0 , dwTqavcc1;
-	DWORD  	  dwTxpbsize, dwRxpbsize;
+	DWORD	  dwTqavcc0;
+	DWORD  	  dwRxpbsize;
 
 
 	// reconfigure the rx packet buffer allocation to 30k
@@ -2655,13 +2654,14 @@ static INT EdrvInitOne(struct pci_dev *pPciDev,
 	 if (iIndex == 0)
 	 {
 	    printk("Link Down\n");
-	    goto ExitFail;
+	    iResult = -EIO; 
+	    goto Exit;
 	 }
 
 	 goto Exit;
 
 ExitFail:
-	 EdrvRemoveOne(pPciDev);
+ 	 EdrvRemoveOne(pPciDev);
 Exit:
      printk("%s finished with %d\n", __FUNCTION__, iResult);
 	 return iResult;

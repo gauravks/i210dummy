@@ -646,7 +646,6 @@ unsigned int    fBufferCompleted;
                                    &fBufferCompleted);
             if(ShbError != kShbOk)
             {
-            	printk("Write Error 1\n");
                 EPL_DBGLVL_EVENTK_TRACE("EplEventuPost(): ShbCirWriteDataChunk(K2U) -> 0x%X\n", ShbError);
                 Ret = kEplEventPostError;
                 goto Exit;
@@ -660,7 +659,6 @@ unsigned int    fBufferCompleted;
                                        &fBufferCompleted);
                 if ((ShbError != kShbOk) || (fBufferCompleted == FALSE))
                 {
-                	printk("Write Error 2\n");
                     EPL_DBGLVL_EVENTK_TRACE("EplEventuPost(): ShbCirWriteDataChunk2(K2U) -> 0x%X\n", ShbError);
                     Ret = kEplEventPostError;
                     goto Exit;

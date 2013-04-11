@@ -150,7 +150,7 @@ static tEplKernel PUBLIC EdrvCyclicCbTimerSlot(tEplTimerEventArg* pEventArg_p);
 
 static tEplKernel EdrvCyclicProcessTxBufferList(void);
 
-//void  PUBLIC  TgtDbgSignalTracePoint (BYTE bTracePointNumber_p);
+
 
 //---------------------------------------------------------------------------
 // module global vars
@@ -783,7 +783,7 @@ static tEplKernel EdrvCyclicProcessTxBufferList(void)
 	BOOL				bFirstPacket = TRUE;
 #if EDRV_USE_TTTX != FALSE
 	unsigned long long	ullLaunchTime;
-	QWORD				qwDiffNs,qwCycleMin,qwCycleMax;
+	QWORD				qwCycleMin,qwCycleMax;
 	QWORD				qwCurrMacTime = 0;
 
 	EdrvGetMacClock(&qwCurrMacTime);

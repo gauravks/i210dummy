@@ -117,6 +117,10 @@
 #define EDRV_CYCLIC_SAMPLE_NUM                  501
 #endif
 
+#ifndef EDRV_USE_TTTX
+#define EDRV_USE_TTTX                    FALSE
+#endif
+
 
 //---------------------------------------------------------------------------
 // types
@@ -267,11 +271,8 @@ tEplKernel EdrvChangeFilter(tEdrvFilter*    pFilter_p,
                             unsigned int    uiEntryChanged_p,
                             unsigned int    uiChangeFlags_p);
 
-int
-EdrvGetMacClock( __u64	*pqwCurtime_p);
-//TODO: Test functions for I210 to be removed during cleanup
-void EdrvClearGpio(INT iPinNo);
-void EdrvSetGpio(INT iPinNo);
+tEplKernel
+EdrvGetMacClock( QWORD	*pqwCurtime_p);
 
 void EdrvSetCyclicFrequency(DWORD dwOffset);
 tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p,DWORD dwOffset);

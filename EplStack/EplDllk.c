@@ -5407,7 +5407,7 @@ tEplKernel      Ret = kEplSuccessful;
 tEplNmtState    NmtState;
 unsigned int    uiHandle = EPL_DLLK_TXFRAME_PREQ;
 TGT_DLLK_DECLARE_FLAGS
-printk("%s \n"__FUNCTION__);
+
     TGT_DLLK_ENTER_CRITICAL_SECTION();
 
     NmtState = EplDllkInstance_g.m_NmtState;
