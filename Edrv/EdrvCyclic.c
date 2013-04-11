@@ -78,8 +78,6 @@
 #error "EdrvCyclic needs EPL_TIMER_USE_HIGHRES = TRUE"
 #endif
 
-#define EDRVI210
-//#define USE_COMP
 /***************************************************************************/
 /*                                                                         */
 /*                                                                         */
@@ -103,9 +101,11 @@
 #endif
 #endif
 
+#if EDRV_USE_TTTX != FALSE
 #define EDRV_SHIFT		150000ULL
-#define EDRV_MIN_SHIFT	5000ULL
-#define EDRV_POS_SHIFT	25000ULL
+#endif
+
+
 //---------------------------------------------------------------------------
 // local types
 //---------------------------------------------------------------------------
@@ -122,12 +122,9 @@ typedef struct
     tEplTimerHdl        m_TimerHdlSlot;
     tEdrvCyclicCbSync   m_pfnCbSync;
     tEdrvCyclicCbError  m_pfnCbError;
-#ifdef EDRVI210
+#if EDRV_USE_TTTX != FALSE
     unsigned long long  m_ullNextCycleTime;
     BOOL                m_fNextCycleValid;
-    QWORD               m_aTxProcFlt[8];
-    unsigned int        m_uiTxProcFltIndex;
-    QWORD               m_dwTxProcDur;
 #endif
 
 #if EDRV_CYCLIC_USE_DIAGNOSTICS != FALSE
@@ -160,11 +157,6 @@ static tEplKernel EdrvCyclicProcessTxBufferList(void);
 //---------------------------------------------------------------------------
 
 static tEdrvCyclicInstance EdrvCyclicInstance_l;
-
-#if (defined EDRVI210 && defined USE_COMP)
-//unsigned long long	ullLaunchTime;
-__u64				udwNextTimerIrqNs;
-#endif
 
 
 /***************************************************************************/
@@ -330,13 +322,13 @@ tEplKernel EdrvCyclicSetNextTxBufferList(tEdrvTxBuffer** apTxBuffer_p, unsigned 
 {
 tEplKernel  Ret = kEplSuccessful;
 unsigned int    uiNextTxBufferList;
-//printk("Set %d\n",EdrvCyclicInstance_l.m_uiCurTxBufferList);
+
     uiNextTxBufferList = EdrvCyclicInstance_l.m_uiCurTxBufferList ^ EdrvCyclicInstance_l.m_uiMaxTxBufferCount;
 
     // check if next list is free
     if (EdrvCyclicInstance_l.m_paTxBufferList[uiNextTxBufferList] != NULL)
     {
-    	printk("Error\n");
+
         Ret = kEplEdrvNextTxListNotEmpty;
         goto Exit;
     }
@@ -344,15 +336,14 @@ unsigned int    uiNextTxBufferList;
     if ((uiTxBufferCount_p == 0)
         || (uiTxBufferCount_p > EdrvCyclicInstance_l.m_uiMaxTxBufferCount))
     {
-    	printk("Error1\n");
-        Ret = kEplEdrvInvalidParam;
+    	Ret = kEplEdrvInvalidParam;
         goto Exit;
     }
 
     // check if last entry in list equals a NULL pointer
     if (apTxBuffer_p[uiTxBufferCount_p - 1] != NULL)
     {
-    	printk("Error2\n");
+
         Ret = kEplEdrvInvalidParam;
         goto Exit;
     }
@@ -406,48 +397,28 @@ tEplKernel      Ret = kEplSuccessful;
 tEplKernel EdrvCyclicStartCycle (void)
 {
 tEplKernel      Ret = kEplSuccessful;
-#ifdef EDRVI210
-//QWORD			qwCurrMacTime;
-int iIndex;
 
-printk("S\n");
-#endif
     if (EdrvCyclicInstance_l.m_dwCycleLenUs == 0)
     {
         Ret = kEplEdrvInvalidCycleLen;
         goto Exit;
     }
-#if (defined EDRVI210 && defined USE_COMP)
-    //set initial time value for TX Process duration
-    EdrvCyclicInstance_l.m_dwTxProcDur = EDRV_POS_SHIFT;
-
-     //initialize the filter
-     for(iIndex=0; iIndex<8; iIndex++)
-     {
-         EdrvCyclicInstance_l.m_aTxProcFlt[iIndex] = EDRV_POS_SHIFT;
-     }
-     EdrvCyclicInstance_l.m_uiTxProcFltIndex = 0;
-#endif
     // clear Tx buffer list
     EdrvCyclicInstance_l.m_uiCurTxBufferList = 0;
     EdrvCyclicInstance_l.m_uiCurTxBufferEntry = 0;
     EPL_MEMSET(EdrvCyclicInstance_l.m_paTxBufferList, 0,
         sizeof (*EdrvCyclicInstance_l.m_paTxBufferList) * EdrvCyclicInstance_l.m_uiMaxTxBufferCount * 2);
-#ifdef EDRVI210
- //   EdrvGetMacClock(&qwCurrMacTime);
-//    EdrvCyclicInstance_l.m_ullNextCycleTime = (qwCurrMacTime + (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL) + 15000ULL);
-#endif
+
     Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
         EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL,
         EdrvCyclicCbTimerCycle,
         0L,
-#ifdef EDRVI210
         TRUE);
 
+#if EDRV_USE_TTTX != FALSE
     EdrvCyclicInstance_l.m_fNextCycleValid = FALSE;
-#else
-    	TRUE);
 #endif
+
 #if EDRV_CYCLIC_USE_DIAGNOSTICS != FALSE
     EdrvCyclicInstance_l.m_ullLastSlotTimeStamp = 0;
 #endif
@@ -477,7 +448,7 @@ tEplKernel EdrvCyclicStopCycle (void)
 tEplKernel      Ret = kEplSuccessful;
 
     Ret = EplTimerHighReskDeleteTimer(&EdrvCyclicInstance_l.m_TimerHdlCycle);
-#ifndef EDRVI210
+#if EDRV_USE_TTTX == FALSE
     Ret = EplTimerHighReskDeleteTimer(&EdrvCyclicInstance_l.m_TimerHdlSlot);
 #endif
 
@@ -596,17 +567,7 @@ tEplKernel EdrvCyclicGetDiagnostics(tEdrvCyclicDiagnostics** ppDiagnostics_p)
 static tEplKernel PUBLIC EdrvCyclicCbTimerCycle(tEplTimerEventArg* pEventArg_p)
 {
 tEplKernel      Ret = kEplSuccessful;
-#if (defined EDRVI210 && defined USE_COMP)
-__u64            dwMacTimeDiff, dwMacTime1, dwMacTime2; //necessary for negative shift filter
-__u64            dwFltAccu; //used for filter calculation (accumulation)
-INT 			 iIndex;
-#endif
-//EdrvSetGpio(0);
-//TgtDbgSignalTracePoint(23);
-//EdrvGetMacClock(&dwMacTimeDiff);
-//printk("Tx%d\n",EdrvCyclicInstance_l.m_uiCurTxBufferEntry);
 
-//printk("CB\n");
 #if EDRV_CYCLIC_USE_DIAGNOSTICS != FALSE
 DWORD           dwCycleTime;
 DWORD           dwUsedCycleTime;
@@ -617,8 +578,7 @@ unsigned long long ullStartNewCycleTimeStamp;
     if (pEventArg_p->m_TimerHdl != EdrvCyclicInstance_l.m_TimerHdlCycle)
     {   // zombie callback
         // just exit
-    	printk("Zombie\n");
-        goto Exit;
+    	goto Exit;
     }
 
 #if EDRV_CYCLIC_USE_DIAGNOSTICS != FALSE
@@ -627,7 +587,7 @@ unsigned long long ullStartNewCycleTimeStamp;
 
     if (EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry] != NULL)
     {
-    	printk("			Printk\n");
+
         Ret = kEplEdrvTxListNotFinishedYet;
         goto Exit;
     }
@@ -638,65 +598,22 @@ unsigned long long ullStartNewCycleTimeStamp;
     EdrvCyclicInstance_l.m_uiCurTxBufferList ^= EdrvCyclicInstance_l.m_uiMaxTxBufferCount;
     EdrvCyclicInstance_l.m_uiCurTxBufferEntry = EdrvCyclicInstance_l.m_uiCurTxBufferList;
 
-   // printk("AfCB%d\n",EdrvCyclicInstance_l.m_uiCurTxBufferEntry);
     if (EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry] == NULL)
     {
-    	printk("		dd\n");
-        Ret = kEplEdrvCurTxListEmpty;
+    	Ret = kEplEdrvCurTxListEmpty;
         goto Exit;
     }
-   // printk("Get MacTime\n");
-#if (defined EDRVI210 && defined USE_COMP)
-    //get timer tick before calling TX Process
-    EdrvGetMacClock(&dwMacTime1);
-#endif
+
     Ret = EdrvCyclicProcessTxBufferList();
 
     if (Ret != kEplSuccessful)
     {
-    	//printk("fail\n");
-        goto Exit;
+    	goto Exit;
     }
-#if (defined EDRVI210 && defined USE_COMP)
-      EdrvGetMacClock(&dwMacTime2);
-    //obtain absolute difference
 
-    //printk("Cb:%lld\n",dwMacTimeDiff);
-        dwMacTimeDiff = dwMacTime2 - dwMacTime1;
-
-       // printk("Proc:,%lld ,",dwMacTimeDiff);
-        //do filtering
-        // add to filter
-        EdrvCyclicInstance_l.m_aTxProcFlt[EdrvCyclicInstance_l.m_uiTxProcFltIndex] = dwMacTimeDiff;
-
-        // increment filter index for next entry
-        EdrvCyclicInstance_l.m_uiTxProcFltIndex++;
-        if( EdrvCyclicInstance_l.m_uiTxProcFltIndex >= 8 )
-        {
-            EdrvCyclicInstance_l.m_uiTxProcFltIndex = 0;
-        }
-
-        // sum all entries
-        dwFltAccu = 0U;
-        for(iIndex=0; iIndex<8; iIndex++)
-        {
-            dwFltAccu += EdrvCyclicInstance_l.m_aTxProcFlt[iIndex];
-        }
-
-        // store average to instance
-        EdrvCyclicInstance_l.m_dwTxProcDur = dwFltAccu / 8;
-        pEventArg_p->m_Arg.m_dwVal = (DWORD)udwNextTimerIrqNs;
-
-#endif
     if (EdrvCyclicInstance_l.m_pfnCbSync != NULL)
     {
-    	//EdrvGetMacClock(&dwMacTime1);
-        Ret = EdrvCyclicInstance_l.m_pfnCbSync();
-        //EdrvGetMacClock(&dwMacTime2);
-        //dwMacTimeDiff = dwMacTime2 - dwMacTime1;
-
-      //  printk("Sync:,%lld \n",dwMacTimeDiff);
-        //printk("S %x\n",Ret);
+    	Ret = EdrvCyclicInstance_l.m_pfnCbSync();
     }
 
 #if EDRV_CYCLIC_USE_DIAGNOSTICS != FALSE
@@ -784,8 +701,9 @@ Exit:
             Ret = EdrvCyclicInstance_l.m_pfnCbError(Ret, NULL);
         }
     }
-  //  EdrvClearGpio(0);
+#if EDRV_USE_TTTX != FALSE
     EdrvCyclicInstance_l.m_ullNextCycleTime += (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL);
+#endif
     return Ret;
 }
 
@@ -860,26 +778,84 @@ Exit:
 
 static tEplKernel EdrvCyclicProcessTxBufferList(void)
 {
-tEplKernel      	Ret = kEplSuccessful;
-tEdrvTxBuffer*  	pTxBuffer;
-BOOL				bFirstPacket = TRUE;
-#ifdef EDRVI210
-unsigned long long	ullLaunchTime;
-__u64				qwDiffNs,qwCycleMin,qwCycleMax;
-unsigned long long	qwCurrMacTime;
-#if (defined EDRVI210 && defined USE_COMP)
+	tEplKernel      	Ret = kEplSuccessful;
+	tEdrvTxBuffer*  	pTxBuffer;
+	BOOL				bFirstPacket = TRUE;
+#if EDRV_USE_TTTX != FALSE
+	unsigned long long	ullLaunchTime;
+	QWORD				qwDiffNs,qwCycleMin,qwCycleMax;
+	QWORD				qwCurrMacTime = 0;
 
-udwNextTimerIrqNs = (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL)  ;
+	EdrvGetMacClock(&qwCurrMacTime);
 #endif
-EdrvGetMacClock(&qwCurrMacTime);
-//printk("Tx%d\n",EdrvCyclicInstance_l.m_uiCurTxBufferEntry);
-//printk("Tx:%lld\n",qwCurrMacTime);
-//printk("Process\n");
-#endif
-#ifndef EDRVI210
-    while ((pTxBuffer = EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry]) != NULL)
-    {
 
+#if EDRV_USE_TTTX != FALSE
+
+	if(!EdrvCyclicInstance_l.m_fNextCycleValid)
+	{
+		EdrvCyclicInstance_l.m_ullNextCycleTime = qwCurrMacTime + EDRV_SHIFT;
+   		ullLaunchTime = EdrvCyclicInstance_l.m_ullNextCycleTime;
+   		EdrvCyclicInstance_l.m_fNextCycleValid = TRUE;
+
+	}
+	else
+	{
+		ullLaunchTime = EdrvCyclicInstance_l.m_ullNextCycleTime;
+
+		if(qwCurrMacTime > (ullLaunchTime))
+	    {
+	    	Ret = kEplEdrvTxListNotFinishedYet;
+	    	goto Exit;
+	    }
+
+
+	}
+
+
+	qwCycleMin = ullLaunchTime;
+	qwCycleMax = ullLaunchTime + (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL);
+
+	while ((pTxBuffer = EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry]) != NULL)
+	{
+		if(pTxBuffer == NULL)
+		{
+			Ret = kEplEdrvBufNotExisting;
+			goto Exit;
+		}
+
+		if(bFirstPacket)
+		{
+			pTxBuffer->m_qwLaunchTime = ullLaunchTime ;
+			bFirstPacket = FALSE;
+		}
+		else
+		{
+			ullLaunchTime = ullLaunchTime + (QWORD)pTxBuffer->m_dwTimeOffsetNs;
+			pTxBuffer->m_qwLaunchTime = ullLaunchTime;
+		}
+
+		if((pTxBuffer->m_qwLaunchTime - qwCycleMin) >  (qwCycleMax - qwCycleMin))
+		{
+			Ret = kEplEdrvTxListNotFinishedYet;
+			goto Exit;
+		}
+
+		Ret = EdrvSendTxMsg(pTxBuffer);
+		if (Ret != kEplSuccessful)
+		{
+			goto Exit;
+		}
+
+		pTxBuffer->m_qwLaunchTime = 0;
+
+		EdrvCyclicInstance_l.m_uiCurTxBufferEntry++;
+
+	}
+
+#else
+
+	while ((pTxBuffer = EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry]) != NULL)
+	{
     	if (pTxBuffer->m_dwTimeOffsetNs == 0)
         {
             Ret = EdrvSendTxMsg(pTxBuffer);
@@ -891,180 +867,21 @@ EdrvGetMacClock(&qwCurrMacTime);
         else
         {
             Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlSlot,
-                pTxBuffer->m_dwTimeOffsetNs,
-                EdrvCyclicCbTimerSlot,
-                0L,
-                FALSE);
+            pTxBuffer->m_dwTimeOffsetNs,
+            EdrvCyclicCbTimerSlot,
+            0L,
+            FALSE);
 
             break;
-        }
+	    }
 
-        EdrvCyclicInstance_l.m_uiCurTxBufferEntry++;
-    }
-#else
-    	if(!EdrvCyclicInstance_l.m_fNextCycleValid)
-    	{
-    		EdrvCyclicInstance_l.m_ullNextCycleTime = qwCurrMacTime + EDRV_SHIFT;
+	    EdrvCyclicInstance_l.m_uiCurTxBufferEntry++;
+	}
 
-    		ullLaunchTime = EdrvCyclicInstance_l.m_ullNextCycleTime;
-    		//printk("		FLt: %lld\n",ullLaunchTime);
-#if (defined EDRVI210 && defined USE_COMP)
-    		udwNextTimerIrqNs -=  EdrvCyclicInstance_l.m_dwTxProcDur;
 #endif
-    		EdrvCyclicInstance_l.m_fNextCycleValid = TRUE;
 
-    	}
-    	else
-    	{
-    		ullLaunchTime = EdrvCyclicInstance_l.m_ullNextCycleTime;
-    		//printk("Lt: %lld\n",ullLaunchTime);
-    		if(qwCurrMacTime > (ullLaunchTime) )
-    		{
-    			printk("Cycle Error\n");
-    			Ret = kEplEdrvTxListNotFinishedYet;
-    			goto Exit;
-    		}
-
-
-
-
-        	//bFirstPacket = FALSE;
-#if (defined EDRVI210 && defined USE_COMP)
-    		if(qwCurrMacTime > (ullLaunchTime) )
-        	{
-        		printk("Invalid Cycle\n");
-      		udwNextTimerIrqNs -= ((qwCurrMacTime - ullLaunchTime) + EDRV_SHIFT);
-        	/*	Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
-        		        udwNextTimerIrqNs,
-        		        EdrvCyclicCbTimerCycle,
-        		        0L,
-        		        FALSE);
-
-        		    if (Ret != kEplSuccessful)
-        		    {
-        		        PRINTF("%s: EplTimerHighReskModifyTimerNs ret=0x%X\n", __func__, Ret);
-        		        goto Exit;
-        		    }
-        		//EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry] = NULL;
-        		EdrvCyclicInstance_l.m_ullNextCycleTime += (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL);
-        		Ret = kEplEdrvTxListNotFinishedYet;
-        		goto Exit;*/
-        	}
-        	else
-        	{
-        		//printk("Correct time\n");
-        	}
-
-        	udwNextTimerIrqNs -= EdrvCyclicInstance_l.m_dwTxProcDur;
-        	qwDiffNs = (ullLaunchTime - qwCurrMacTime);
-
-        	//printk(",Diff:,%lld\n ,",qwDiffNs);
-        	if( qwDiffNs > (EDRV_SHIFT) )
-        	{
-        	    //time difference is larger negative shift
-        	    udwNextTimerIrqNs += (qwDiffNs - EDRV_SHIFT);
-        	}
-        	else if( qwDiffNs > (EDRV_MIN_SHIFT) )
-        	{
-        		//time difference is shorter than negative shift but larger than minimum
-        	    udwNextTimerIrqNs -= (EDRV_SHIFT  - qwDiffNs);
-        	}
-        	else
-            {
-        	    //time difference is too short => cycle violation!
-        		printk("Invalid Dif\n");
-        	    udwNextTimerIrqNs -= (EDRV_SHIFT - qwDiffNs);
-        	    //EdrvSetGpio(2);
-        	/*    Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
-        	            		        udwNextTimerIrqNs,
-        	            		        EdrvCyclicCbTimerCycle,
-        	            		        0L,
-        	            		        FALSE);
-
-        	     if (Ret != kEplSuccessful)
-        	     {
-        	            PRINTF("%s: EplTimerHighReskModifyTimerNs ret=0x%X\n", __func__, Ret);
-        	       	        goto Exit;
-        	     }
-        	    // EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry] = NULL;
-        	    EdrvCyclicInstance_l.m_ullNextCycleTime += (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL);
-        	    Ret = kEplEdrvTxListNotFinishedYet;
-        	    goto Exit;
-        	    */
-        	}
-#endif
-        }
-      //  else
-       // {
-      //  	ullLaunchTime = ullLaunchTime + (QWORD)pTxBuffer->m_dwTimeOffsetNs;
-     //   	pTxBuffer->m_qwLaunchTime =  ullLaunchTime;
-     //   }
-
-       // printk("Lt: %lld\n",pTxBuffer->m_qwLaunchTime);
-
-
-    	qwCycleMin = ullLaunchTime;
-    	qwCycleMax = ullLaunchTime + (EdrvCyclicInstance_l.m_dwCycleLenUs * 1000ULL);
-
-		while ((pTxBuffer = EdrvCyclicInstance_l.m_paTxBufferList[EdrvCyclicInstance_l.m_uiCurTxBufferEntry]) != NULL)
-		{
-			if(pTxBuffer == NULL)
-			{
-				printk("*****NULLLL\n");
-				goto Exit;
-			}
-			//printk("Off:%d\n",pTxBuffer->m_dwTimeOffsetNs);
-			if(bFirstPacket)
-			{
-				pTxBuffer->m_qwLaunchTime = ullLaunchTime ;//+ (__u64)pTxBuffer->m_dwTimeOffsetNs;
-				bFirstPacket = FALSE;
-			}
-			else
-			{
-				ullLaunchTime = ullLaunchTime + (__u64)pTxBuffer->m_dwTimeOffsetNs;
-				pTxBuffer->m_qwLaunchTime = ullLaunchTime;
-			}
-
-
-			if((pTxBuffer->m_qwLaunchTime - qwCycleMin) >  (qwCycleMax - qwCycleMin))
-			{
-				Ret = kEplEdrvTxListNotFinishedYet;
-				goto Exit;
-			}
-			//printk("Send\n");
-			//printk("Cb:%p\n",pTxBuffer);
-			Ret = EdrvSendTxMsg(pTxBuffer);
-			if (Ret != kEplSuccessful)
-			{
-				printk("Send Failes %x",Ret);
-				goto Exit;
-			}
-			pTxBuffer->m_qwLaunchTime = 0;
-
-			EdrvCyclicInstance_l.m_uiCurTxBufferEntry++;
-
-		}
-
-
-//printk("Restart Timer\n");
-   // printk("Irq:,%lld,",udwNextTimerIrqNs);
-#if (defined EDRVI210 && defined USE_COMP)
- /*  Ret = EplTimerHighReskModifyTimerNs(&EdrvCyclicInstance_l.m_TimerHdlCycle,
-            		        udwNextTimerIrqNs,
-           		        EdrvCyclicCbTimerCycle,
-           		        0L,
-           		        FALSE);
-
-    if (Ret != kEplSuccessful)
-    {
-         PRINTF("%s: EplTimerHighReskModifyTimerNs ret=0x%X\n", __func__, Ret);
-          goto Exit;
-    }
-*/
-#endif
-#endif
 Exit:
-//printk("AfTx%d\n",EdrvCyclicInstance_l.m_uiCurTxBufferEntry);
+
     if (Ret != kEplSuccessful)
     {
         if (EdrvCyclicInstance_l.m_pfnCbError != NULL)
@@ -1072,7 +889,7 @@ Exit:
             Ret = EdrvCyclicInstance_l.m_pfnCbError(Ret, pTxBuffer);
         }
     }
-  // EdrvClearGpio(1);
+
     return Ret;
 }
 
