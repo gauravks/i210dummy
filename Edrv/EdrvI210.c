@@ -74,24 +74,27 @@
 //---------------------------------------------------------------------------
 // const defines
 //---------------------------------------------------------------------------
-#define VENDOR_ID 0x8086
-#define DEVICE_ID 0x1533
 
-//#define PROMICIOUS_MODE
+//---------------------------------------------------------------------------
+//			Intel's I210 Ethernet controller specific defines
+//---------------------------------------------------------------------------
 
 #define CONFIG_BAR  0
 #define DRIVER_NAME "epl"
 
-#ifdef USE_MULTIPLE_QUEUE
-#define EDRV_MAX_RX_QUEUES       4
-#define EDRV_MAX_TX_QUEUES       4
-#define EDRV_MAX_QUEUE_VECTOR	 4
-#else
+
 #define EDRV_MAX_RX_QUEUES       1
 #define EDRV_MAX_TX_QUEUES       1
 #define EDRV_MAX_QUEUE_VECTOR	 1
-#endif
 
+
+#define INTERRUPT_STRING_SIZE	 25
+#define	SEC_TO_NSEC				 1000000000
+
+
+//------------------------------------------------------------------------------
+//					Device Register offsets
+//------------------------------------------------------------------------------
 #define EDRV_CTRL_REG            0x00000		// Device Control Register
 #define EDRV_CTRL_EXTN_REG       0x00018		// Extended Device Control Register
 #define EDRV_STATUS_REG          0x00008		// Device Status Register
@@ -104,7 +107,7 @@
 #define EDRV_INTR_EIAC			 0x0152C		// Extended Interrupt Auto Clear
 #define EDRV_INTR_GPIE_REG       0x01514		// General Purpose Interrupt Enable
 #define EDRV_IVAR0_REG			 0x01700		// Interrupt Vector Allocation Registers (Tx-Rx queues)
-#define EDRV_IVAR_MISC			 0x01740 		// IVAR for "other" causes
+#define EDRV_IVAR_MISC			 0x01740 		// IVAR for other causes
 #define EDRV_EXT_INTR_REG        0X01580		// Extended Interrupt Cause Set
 #define EDRV_EXT_INTR_MASK_CLEAR 0x01528		// Extended Interrupt Mask Clear
 #define EDRV_EXT_INTR_MASK_SET   0x01524		// Extended Interrupt Mask Set/Read
@@ -112,7 +115,7 @@
 #define EDRV_SWSM_REG            0x05B50    	// Software Semaphore
 #define EDRV_TIPG_REG            0x00410    	// Transmit Inter Packet Gap
 #define EDRV_TXPBSIZE_REG        0x03404		// Transmit Packet Buffer Size
-#define EDRV_DCA_CTRL_REG        0x05B74		//
+#define EDRV_DCA_CTRL_REG        0x05B74		// Direct Cache Access control register
 #define EDRV_EECD_REG	         0x00010		// EEPROM-Mode Control Register
 #define EDRV_SW_FW_SYNC	         0x05B5C		// Software-Firmware Synchronization
 #define	EDRV_SYSTIMR_REG		 0x0B6F8		// System time register Residue
@@ -122,20 +125,23 @@
 #define EDRV_MRQC_REG			 0x05818		// Multiple Receive Queues Command
 #define EDRV_EEER_REG			 0x00E30		// Energy Efficient Ethernet (EEE) Register
 
-
-#define EDRV_SWSM_SMBI           0x00000001		 //
+// Semaphore defines used for Software/Firmware synchronization
+#define EDRV_SWSM_SMBI           0x00000001		// Software 
 #define EDRV_SWSM_SWESMBI        0x00000002  	// Software EEPROM Semaphore Bit
-#define EDRV_EECD_AUTO_RD		 0x00000200
-#define EDRV_SWFW_PHY0_SM	     0x02
+#define EDRV_EECD_AUTO_RD		 0x00000200		// 
+#define EDRV_SWFW_PHY0_SM	     0x02			// Software Phy Semaphore Bit
 
-// Tx Registers
+
+//------------------------------------------------------------------------------
+//					Transmit Register offset and defines
+//------------------------------------------------------------------------------
+
 #define EDRV_TCTL_REG            0x00400		// Tx Control
 #define EDRV_TCTL_EXT_REG        0x00404		// Tx Control Extended
 #define EDRV_DTXCTL_REG          0x03590		// DMA Tx Control
 #define EDRV_DTX_MAX_PKTSZ_REG   0x0355C		// DMA Tx Max Allowable Packet Size
 #define EDRV_TXPBSIZE_REG		 0x03404		// Transmit Packet Buffer Size
 #define EDRV_TQAVCTRL_REG        0x03570		// Transmit Qav Control
-#define EDRV_TQAVARBCTRL_REG	 0x03574	 	// TODO :Verify this register
 
 #define EDRV_TDBAL(n)            ((n < 4) ? (0x0E000 + 0x40 * n) :\
                                  (0x0E000 + 0x40 * (n - 4)))			// Tx Descriptor Base Low ( n: 0-3 )
@@ -157,19 +163,18 @@
                                  (0x0E038 + 0x40 * (n - 1)))			// Tx Descriptor WB Address Low Queue ( n: 0-3 )
 
 
-#define EDRV_TIPG_DEF            0x00702008		 // default according to Intel PCIe GbE Controllers Open Source Software Developer's Manual
-#define EDRV_TXPBSIZE_DEF		 0x04104208 	 // 8 Kb TQ0, 8Kb TQ1, 4 Kb TQ2, 4Kb TQ3 and 4 Kb Os2Bmc
+#define EDRV_TIPG_DEF            0x00702008		// default according to Intel PCIe GbE Controllers Open Source Software Developer's Manual
+#define EDRV_TXPBSIZE_DEF		 0x04104208 	// 8 Kb TQ0, 8Kb TQ1, 4 Kb TQ2, 4Kb TQ3 and 4 Kb Os2Bmc
 
-// Tx Descriptor Defines
-#define EDRV_MAX_TX_DESCRIPTOR   256  			//Max no of Desc in mem
-#define EDRV_MAX_TX_DESC_LEN     (EDRV_MAX_TX_DESCRIPTOR - 1)     //one slot to diff full
+#define EDRV_MAX_TX_DESCRIPTOR   256  			// Max no of Desc in mem
+#define EDRV_MAX_TX_DESC_LEN     (EDRV_MAX_TX_DESCRIPTOR - 1)     
+												// One slot to diff full
 #define EDRV_MAX_TTX_DESC_LEN	 ((EDRV_MAX_TX_DESCRIPTOR >> 1) -1)
 #ifndef EDRV_MAX_TX_BUFFERS
 #define EDRV_MAX_TX_BUFFERS    	 128			//Max no of Buffers
 #endif
 
 #define EDRV_MAX_FRAME_SIZE      0x600 			// 1536
-//AB: changed Buff size
 #define EDRV_TX_BUFFER_SIZE      ( EDRV_MAX_TX_BUFFERS * EDRV_MAX_FRAME_SIZE)
 #define EDRV_TX_DESCS_SIZE       (EDRV_MAX_TX_DESCRIPTOR * sizeof(tEdrvAdvTxDesc))
 
@@ -211,7 +216,9 @@
 #define EDRV_TXPBSIZE_TX2PB_SHIFT    	12		// Tx packet buffer size shift for 3 queue
 #define EDRV_TXPBSIZE_TX3PB_SHIFT    	18		// Tx packet buffer size shift for 4 queue
 
-// Rx Registers
+//------------------------------------------------------------------------------
+//					Receive Register offset and defines
+//------------------------------------------------------------------------------
 #define EDRV_RCTL_REG			 0x00100	 	// Rx Control
 #define EDRV_RXPBSIZE_REG		 0x02404	 	// Rx Packet Buffer Size
 
@@ -230,24 +237,22 @@
 #define EDRV_RXDCTL(n)           ((n < 4) ? (0x0C028 + 0x40 * n) :\
                                  (0x0C028 + 0x40 * (n - 4)))			// Receive Descriptor Control Queue
 
-#define EDRV_RAL(n)				 (0x05400 + 8 * n)	 // Receive Address Low (15:0)
-#define EDRV_RAH(n)				 (0x05404 + 8 * n)	 // Receive Address High (15:0)
-#define EDRV_MTA(n)        		 (0x05200 + 4 * n)  // Multicast Table Array
-
-//Rx Descriptor Defines
-#define EDRV_MAX_RX_DESCRIPTOR   256  				//Max no of Desc in mem
+#define EDRV_RAL(n)				 (0x05400 + 8 * n)	  // Receive Address Low (15:0)
+#define EDRV_RAH(n)				 (0x05404 + 8 * n)	  // Receive Address High (15:0)
+#define EDRV_MTA(n)        		 (0x05200 + 4 * n)    // Multicast Table Array
+ 
+#define EDRV_MAX_RX_DESCRIPTOR   256  			// Max no of Desc in mem
 #define EDRV_MAX_RX_DESC_LEN     (EDRV_MAX_RX_DESCRIPTOR - 1)
-#define EDRV_MAX_RX_BUFFERS      256  				//Max no of Buffers
+												// Used for buffer handling
+#define EDRV_MAX_RX_BUFFERS      256  			// Max no of Buffers
 #define EDRV_RX_BUFFER_SIZE      (EDRV_MAX_RX_BUFFERS * EDRV_MAX_FRAME_SIZE)
+												// Rx buffer size
 #define EDRV_RX_DESCS_SIZE       (EDRV_MAX_RX_DESCRIPTOR * sizeof(tEdrvAdvRxDesc))
 
-// Rx Descriptor Defines
 #define EDRV_RDESC_STATUS_EOP 	 (1 << 1)		// End of Packet
 #define EDRV_RDESC_STATUS_DD	 (1 << 0)		// Descriptor done
-#define EDRV_RDESC_ERRORS_RXE	 (1 << 31)		// RX Data Error
+#define EDRV_RDESC_ERRORS_RXE	 (1 << 31)		// RX data Error
 
-
-//Rx Register defines
 #define EDRV_RCTL_EN			 (1 << 1 )		// Receive Enable
 #define EDRV_RCTL_SBP			 (1 << 2 ) 		// Store Bad Packets
 #define EDRV_RCTL_UPE			 (1 << 3 ) 		// Unicast Enable
@@ -272,13 +277,15 @@
 #define EDRV_RXDCTL_PTHRESH      0				// Prefetch Threshold
 #define EDRV_RXDCTL_HTHRESH      0				// Host Threshold
 #define EDRV_RXDCTL_WTHRESH      1				// Write-back threshold
-#define EDRV_RXDCTL_QUEUE_EN     (1 << 25)		// Recieve Queue Enable
+#define EDRV_RXDCTL_QUEUE_EN     (1 << 25)		// Receive Queue Enable
 #define EDRV_RXDCTL_SWFLUSH 	 (1 << 26)		// Software flush
 #define EDRV_RXPBSIZE_CLEAR		 0x3F			// Clear Packet buffer size
 #define EDRV_RXPBSIZE_DEF		 0x8000001E		// default configuration
 #define	EDRV_RAH_AV				 (1 << 31)		// Address Valid
 
-// Time Sync Registers and Defines
+//------------------------------------------------------------------------------
+//					Time Sync Register offset and defines
+//------------------------------------------------------------------------------
 #define EDRV_LAUNCH_OSO			 0x03578		// Launch Time Offset Register 0
 #define EDRV_FREQOUT0 			 0x0B654		// Frequency Out 0 Control Register
 #define EDRV_TSIM 				 0x0B674		// Time Sync Interrupt Mask Register
@@ -293,18 +300,14 @@
 #define	EDRV_TSIM_TT0 			 (1 << 3)		// Target time 0 Trigger Mask.
 #define	EDRV_TSIM_TT1 			 (1 << 4)		// Target time 1 Trigger Mask.
 #define EDRV_TSAUXC_SAMP_AUTO	 0x00000008		// Sample SYSTIM into AUXSTMP0 register
-
 #define EDRV_TSAUXC_EN_TT0		 (1 << 0)		// Enable target time 0
 #define EDRV_TSAUXC_EN_TT1		 (1 << 1)		// Enable target time 1
 #define EDRV_TSAUXC_EN_CLK0 	 (1 << 2)		// Enable Configurable Frequency Clock 0
 #define EDRV_TSAUXC_ST0			 (1 << 4)		// Start Clock 0 Toggle on Target Time 0
-
 #define EDRV_TSSDP_TS_SDP3_SEL_CLK0 (2 << 15)	// Freq clock 0 is output on SDP3
 #define EDRV_TSSDP_TS_SDP3_EN 		(1 << 17)	// SDP3 is assigned to Tsync
 #define EDRV_TSSDP_TS_SDP0_SEL_CLK0 (2 << 6 )	// Freq clock 0 is output on SDP0
 #define EDRV_TSSDP_TS_SDP0_EN 		(1 << 8 )	// SDP0 is assigned to Tsync
-
-
 #define SDP0_SET_DIR_OUT		 0x00400000		// Set direction Out for SDP0
 #define SDP0_SET_HIGH			 0x00040000		// Set SDP0 High
 #define SDP1_SET_DIR_OUT		 0x00800000		// Set direction Out for SDP1
@@ -314,7 +317,10 @@
 #define SDP3_SET_DIR_OUT    	 0x00000800		// Set direction Out for SDP3
 #define SDP3_SET_HIGH       	 0x00000080		// Set SDP3 High
 
-// MDIC specific defines
+//------------------------------------------------------------------------------
+//					MDIC specific defines
+//------------------------------------------------------------------------------
+
 #define EDRV_MDIC_DATA_MASK      0x0000FFFF		// Data mask
 #define EDRV_MDIC_OP_READ        0x08000000		// Read command for PHY register
 #define EDRV_MDIC_OP_WRITE       0x04000000		// Write command for PHY register
@@ -323,7 +329,10 @@
 #define EDRV_MDIC_ERR            0x40000000		// Error in read
 #define EDRV_MDIC_REGADD_MASK    0x001F0000		// PHY register address mask
 
-// Interrupt Defines
+//------------------------------------------------------------------------------
+//					Interrupt defines
+//------------------------------------------------------------------------------
+
 #define EDRV_EIMC_CLEAR_ALL      0xC000001F		// Clear all interrupts
 #define EDRV_INTR_GPIE_NSICR     (1 << 0 )		// Non Selective Interrupt Clear on Read
 #define EDRV_INTR_GPIE_MULT_MSIX (1 << 4 )		// Multiple MSIX
@@ -336,21 +345,23 @@
 #define EDRV_INTR_ICR_FER		 (1 << 22)		// Fatal Error
 #define EDRV_EIMC_OTHR_EN        (1 << 31)		// Other Interrupt Cause Active
 #define EDRV_EICS_OTHER			 (1 << 0 )		// Vector for Other Interrupt Cause in MSI-X mode
-#define EDRV_EICS_QUEUE			 0x0000001E		//
+#define EDRV_EICS_QUEUE			 0x0000001E		// All queue interrupts
 #define EDRV_EICS_TXRXQUEUE1	 (1 << 1 )		// Vector for TX-RX queue 0
 #define EDRV_EICS_TXRXQUEUE2	 (1 << 2 )		// Vector for TX-RX queue 1
 #define EDRV_EICS_TXRXQUEUE3	 (1 << 3 )		// Vector for TX-RX queue 2
 #define EDRV_EICS_TXRXQUEUE4     (1 << 4 )		// Vector for TX-RX queue 3
 #define EDRV_IVAR_VALID			 0x80			// Interrupt vector valid bit
 
-#define EDRV_INTR_ICR_MASK_DEF 	   (EDRV_INTR_ICR_TXDW \
-                               	   | EDRV_INTR_ICR_RXDW \
-                               	   | EDRV_INTR_ICR_RXDMT0 \
-                               	   | EDRV_INTR_ICR_RXMISS \
-                               	   | EDRV_INTR_ICR_FER \
-                               	   | EDRV_INTR_ICR_TIME_SYNC)
+#define EDRV_INTR_ICR_MASK_DEF 	   (EDRV_INTR_ICR_TXDW  		/* Transmit descriptor write back */
+                               	   | EDRV_INTR_ICR_RXDW 		/* Receive descriptor write back */
+                               	   | EDRV_INTR_ICR_RXDMT0 		/* Receive Descriptor Minimum Threshold Reached */
+                               	   | EDRV_INTR_ICR_RXMISS 	    /* Missed packet interrupt */
+                               	   | EDRV_INTR_ICR_FER 		 	/* Fatal Error */
+                               	   | EDRV_INTR_ICR_TIME_SYNC)	/* Time Sync interrupt */
 
-// Phy Defines
+//------------------------------------------------------------------------------
+//					Phy register offsets and defines
+//------------------------------------------------------------------------------
 #define PHY_CONTROL_REG_OFFSET   0x00			// Phy Control register
 #define PHY_STATUS_REG_OFFSET    0x01			// Phy Status Register
 #define PHY_LINK_SPEED_100       0x2000			// 100 MB/s Link speed
@@ -360,7 +371,10 @@
 #define PHY_I210_COPPER_SPEC	 0x0010			// I210 specific phy register
 #define PHY_I210_CS_POWER_DOWN	 0x0002			// Power down phy
 
-// Control Register Defines
+//------------------------------------------------------------------------------
+//					Control/Control Extension register defines
+//------------------------------------------------------------------------------
+
 #define EDRV_CTRL_FD             0x00000001		// Full Duplex
 #define EDRV_CTRL_MASTER_DIS     (1 << 2 )		// GIO Master Disable
 #define EDRV_CTRL_SLU            (1 << 6 )		// Set Link Up
@@ -370,11 +384,11 @@
 #define EDRV_CTRL_TFCE           (1 << 28)		// Transmit Flow Control Enable
 #define EDRV_CTRL_DEV_RST        (1 << 29)		// Device Reset
 #define EDRV_CTRL_PHY_RST        (1 << 31)		// PHY Reset
-
-// Control Extension Define
 #define EDRV_CTRL_EXTN_DRV_LOAD  (1 << 28)		// Software driver loaded. Used to take control from Firmware
 
-// Status registers defines
+//------------------------------------------------------------------------------
+//					Status register defines
+//------------------------------------------------------------------------------
 #define EDRV_STATUS_MASTER_EN    (1 << 19)		// GIO Master Enable
 #define EDRV_STATUS_PF_RST_DONE  (1 << 21)		// Software reset done
 #define EDRV_STATUS_LU           (1 << 1)		// Link Up
@@ -383,8 +397,13 @@
 #define EDRV_MASTER_DIS_TIMEOUT  90   // ms		// Master disable timeout
 #define EDRV_LINK_UP_TIMEOUT     3000 // ms		// Link up timeout
 #define EDRV_AUTO_READ_DONE_TIMEOUT		  10	// Auto register read done timeout
+#define EDRV_PHY_SEMPHORE_TIMEOUT         100
+#define EDRV_POLL_TIMEOUT		 3				// Tx-Rx Enable bit poll timeout
 
-// Statistic registers
+//------------------------------------------------------------------------------
+//					Statistic registers
+//------------------------------------------------------------------------------
+
 #define EDRV_STAT_TPR            0x040D0		// Total Packets Received
 #define EDRV_STAT_GPRC			 0x04074		// Good Packets Received Count
 #define EDRV_STAT_BPRC			 0x04078		// Broadcast Packets Received Count
@@ -441,22 +460,33 @@
 // local types
 //---------------------------------------------------------------------------
 
+
+/**
+	Advanced Transmit data descriptor union
+	
+	Points to buffers used to pass data to the controller
+*/
 typedef union
 {
 	struct
 	{
-		QWORD 			m_le_qwBufferAddr;    	// Address of descriptor's data buf */
-		DWORD 			m_dwCmdTypeLen;		 	// Command, Desc Type, data Len */
-		DWORD 			m_dwStatusIdxPaylen;	// Status, Index , Payload len
+		QWORD 			m_le_qwBufferAddr;    	// Address of descriptor's data buf
+		DWORD 			m_dwCmdTypeLen;		 	// Command, Descriptor Type, data length
+		DWORD 			m_dwStatusIdxPaylen;	// Status, Index , Payload length
 	} m_sRead;
 	struct
 	{
-		QWORD 			m_le_qwTimeStamp;     	// Rsvd or Dma timestamp if enabled*/
+		QWORD 			m_le_qwTimeStamp;     	// Rsvd or Dma timestamp if enabled
 		DWORD 			m_le_dwRsvd;			// Reserved
 		DWORD 			m_le_dwstatus;		    // Status
 	} m_sWb;
 }tEdrvAdvTxDesc;
 
+/**
+	Advanced context descriptor structure
+	
+	Specifies a launch time for a packet stored in succeeding advanced data descriptor
+*/
 typedef struct
 {
 	DWORD 				m_dwIpMaclenVlan;
@@ -465,6 +495,11 @@ typedef struct
 	DWORD 				m_dwIdxL4lenMss;
 }tEdrvContextDesc;
 
+/**
+	Advanced Recieve data descriptor union
+	
+	points to buffers used to pass data to the device driver from controller 
+*/
 typedef union
 {
 	struct
@@ -478,30 +513,39 @@ typedef union
 		WORD	   		m_wRssPktType;			// RSS Type, Packet Type
 		WORD	   		m_wHeaderLen;			// Header Len
 		DWORD	   		m_dwRssHash;			// Rss Hash
-		DWORD	   		m_dwExtStatusError;		// Extended Erro and Status
+		DWORD	   		m_dwExtStatusError;		// Extended Error and Status
 		DWORD	   		m_dwLenVlanTag;			// Data Length, Vlan Tag
 	}sWb;
 }tEdrvAdvRxDesc;
 
+/**
+	Time triggered Send Descriptor
+	
+	Structure used to refer to a pair of context descriptor and advanced Tx data descriptor
+	pointing to a single data packet with its respective launch time.
+	
+	This structure simplifies the queue handling logic in time triggered send mode and
+	makes it consistent with older configuration
+*/
+
 typedef struct{
 	tEdrvContextDesc	m_CtxtDesc;	 			// Context Descriptor
-	tEdrvAdvTxDesc		m_Adv_desc;	 			// Data Descriptor
+	tEdrvAdvTxDesc		m_Advdesc;	 			// Data Descriptor
 }tEdrvTtxDesc;
 
-// Structure for Queue Vector
+ 
+/**
+	Structure for Queue Vector
+	
+	Used as reference in ISR to identify the corresponding Tx-Rx queue pair
+*/
 typedef struct{
 	UINT				m_uiQueueIdx;			// Queue Index
 	UINT				m_uiVector;				// Vector Index
-	char 				m_strName[25];			// Name to be registered for vector
+	char 				m_strName[INTERRUPT_STRING_SIZE];			
+												// Name to be registered for vector
 }tEdrvQVector;
 
-typedef struct
-{
-	tEdrvAdvTxDesc 		*m_pDesc;				// Desc
-	QWORD				m_qwLaunchTime;			// Launch time set
-	QWORD				m_qwActualTime;			// Actual transmission time (DMA timestamp)
-
-}tEdrvTestpacket;
 
 // Structure for Bookkeeping DMA address and Length
 typedef struct
@@ -514,15 +558,13 @@ typedef struct
 typedef struct
 {
 	tEdrvQVector		*m_Qvector;				// Pointer to the vector structure for this queue
-	INT					m_iIndex;				// Queue Index
+	INT					m_iIndex;				// Queue index
 	dma_addr_t          m_DescDma;				// Dma address for descriptor queue
 	void                *m_pDescVirt;			// Virtual address for descriptor queue
 	tEdrvTxBuffer*      m_apTxBuffer[EDRV_MAX_TX_DESCRIPTOR];
 												// Tx buffer Array
-	tEdrvTestpacket		*m_pTestPacket;			// Pointer to TestPacket structure, can be used to
-												// calculate latency
 	BYTE __iomem        *m_pbBuf;				// pointer to buffer for the Queue
-	tEdrvPktBuff		*m_PktBuff;				// Bookeeping structure
+	tEdrvPktBuff		*m_PktBuff;				// Bookkeeping structure
 	INT					m_iNextDesc;			// Next Descriptor to used
 	INT					m_iNextWb;				// Next descriptor to be Written back
 }tEdrvQueue;
@@ -531,22 +573,26 @@ typedef struct
 {
     struct pci_dev      *m_pPciDev;      		// pointer to PCI device structure
     void                *m_pIoAddr;      		// pointer to register space of Ethernet controller
-    tEdrvQueue *		m_pTxQueue[EDRV_MAX_TX_QUEUES];		// Tx queue array
-    tEdrvQueue *		m_pRxQueue[EDRV_MAX_RX_QUEUES];		// Rx Queue Array
-    tEdrvQVector *		m_pQvector[EDRV_MAX_QUEUE_VECTOR];	// Vector Array
+    tEdrvQueue *		m_pTxQueue[EDRV_MAX_TX_QUEUES];
+    											// Tx queue array
+    tEdrvQueue *		m_pRxQueue[EDRV_MAX_RX_QUEUES];
+    											// Rx Queue Array
+    tEdrvQVector *		m_pQvector[EDRV_MAX_QUEUE_VECTOR];
+    											// Vector Array
     BYTE*               m_pbTxBuf;		 		// Tx Buffer pointer
     BOOL                m_afTxBufUsed[EDRV_MAX_TX_BUFFERS];
+    											// Array to keep track of used Tx buffers
 
     unsigned int		m_TxMaxQueue;	 		// Max Tx Queue
     unsigned int		m_RxMaxQueue;	 		// Max Rx Queue
     unsigned int		m_NumQVectors;	 		// No. of Queue vectors (Total = NumQvectors + 1)
-    struct msix_entry   *m_pMsixEntry;	 		// pointer to MSI-X structure
+    struct msix_entry   *m_pMsixEntry;	 		// Pointer to MSI-X structure
 
     // Timer related members
     tEplTimerHdl		m_TimerHdl;		 		// Timer Handle
     tEplHighResCallback m_HighResTimerCb;		// Timer Callback
 
-    tEdrvInitParam      m_InitParam;			// Initialisation Parameters
+    tEdrvInitParam      m_InitParam;			// Initialization Parameters
 }tEdrvInstance;
 
 //---------------------------------------------------------------------------
@@ -618,18 +664,20 @@ static struct pci_driver EdrvDriver = {
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvInit(tEdrvInitParam * pEdrvInitParam_p)
+
+
+tEplKernel EdrvInit (tEdrvInitParam * pEdrvInitParam_p)
 {
 	tEplKernel  Ret;
-	int         iResult;
-	int         iIndex;
+	INT         iResult;
+	INT         iIndex;
 
 	Ret = kEplSuccessful;
 
 	// clear instance structure
-	EPL_MEMSET(&EdrvInstance_l, 0, sizeof (EdrvInstance_l));
+	EPL_MEMSET( &EdrvInstance_l, 0, sizeof (EdrvInstance_l) );
 
-	if(NULL != pEdrvInitParam_p)
+	if( NULL != pEdrvInitParam_p )
 	{
 		// save the init data
 		EdrvInstance_l.m_InitParam = *pEdrvInitParam_p;
@@ -646,20 +694,20 @@ tEplKernel EdrvInit(tEdrvInitParam * pEdrvInitParam_p)
 
 	printk("Registering Driver.....");
 	iResult = pci_register_driver (&EdrvDriver);
-	if(0 != iResult)
+	if( 0 != iResult )
 	{
 	    printk("%s pci_register_driver failed with %d\n", __FUNCTION__, iResult);
 	    Ret = kEplNoResource;
 	    goto Exit;
 	}
 	
-	if (EdrvInstance_l.m_pPciDev == NULL)
-    	{
-             printk("%s m_pPciDev=NULL\n", __FUNCTION__);
-             Ret = EdrvShutdown();
-             Ret = kEplNoResource;
-             goto Exit;
-    	}
+	if ( NULL == EdrvInstance_l.m_pPciDev )
+    {
+        printk("%s m_pPciDev=NULL\n", __FUNCTION__);
+        Ret = EdrvShutdown();
+        Ret = kEplNoResource;
+        goto Exit;
+    }
 
 	// local MAC address might have been changed in EdrvInitOne
 	EPL_MEMCPY(pEdrvInitParam_p->m_abMyMacAddr, EdrvInstance_l.m_InitParam.m_abMyMacAddr, 6);
@@ -689,7 +737,9 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvShutdown(void)
+
+
+tEplKernel EdrvShutdown (void)
 {
 	// unregister PCI driver
 	printk("%s calling pci_unregister_driver()\n", __FUNCTION__);
@@ -711,23 +761,25 @@ tEplKernel EdrvShutdown(void)
 
 */
 //------------------------------------------------------------------------------
+
+
 tEplKernel EdrvDefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 {
 	tEplKernel      Ret = kEplSuccessful;
 	DWORD       	dwData;
-	int         	iIndex;
+	INT         	iIndex;
 
 	// entry 0 is used for local MAC address
 	for (iIndex = 1; iIndex < 16; iIndex++)
 	{
 	    dwData = EDRV_REGDW_READ(EDRV_RAH(iIndex));
-	    if ((dwData & EDRV_RAH_AV) == 0)
+	    if ( 0 == (dwData & EDRV_RAH_AV) )
 	    {   // free MAC address entry
 	        break;
 	    }
 	}
 
-	if (iIndex == 16)
+	if ( 16 == iIndex )
 	{   // no free entry found
 	    printk("%s Implementation of Multicast Table Array support required\n", __FUNCTION__);
 	    Ret = kEplEdrvInitError;
@@ -767,11 +819,13 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
+
+
 tEplKernel EdrvUndefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 {
 	tEplKernel  Ret = kEplSuccessful;
 	DWORD       dwData;
-	int         iIndex;
+	INT         iIndex;
 	DWORD       dwAddrLow;
 	DWORD       dwAddrHigh;
 
@@ -788,7 +842,7 @@ tEplKernel EdrvUndefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 	for (iIndex = 1; iIndex < 16; iIndex++)
 	{
 	    dwData = EDRV_REGDW_READ(EDRV_RAH(iIndex));
-	    if ((dwData & (EDRV_RAH_AV | 0xFFFF)) == dwAddrHigh)
+	    if ( dwAddrHigh == (dwData & (EDRV_RAH_AV | 0xFFFF)) )
 	    {
 	        dwData = EDRV_REGDW_READ(EDRV_RAL(iIndex));
 	        if (dwData == dwAddrLow)
@@ -801,15 +855,18 @@ tEplKernel EdrvUndefineRxMacAddrEntry (BYTE * pbMacAddr_p)
 
 	return Ret;
 }
+
+
 tEplKernel EdrvChangeFilter(tEdrvFilter*    pFilter_p,
-                            unsigned int    uiCount_p,
-                            unsigned int    uiEntryChanged_p,
-                            unsigned int    uiChangeFlags_p)
+                            UINT		    uiCount_p,
+                            UINT		    uiEntryChanged_p,
+                            UINT		    uiChangeFlags_p)
 {
 tEplKernel      Ret = kEplSuccessful;
 
     return Ret;
 }
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvAllocTxMsgBuffer()
@@ -826,27 +883,29 @@ tEplKernel      Ret = kEplSuccessful;
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvAllocTxMsgBuffer       (tEdrvTxBuffer * pBuffer_p)
-{
-	tEplKernel Ret = kEplSuccessful;
-	DWORD	dwChannel;
 
-	if (pBuffer_p->m_uiMaxBufferLen > EDRV_MAX_FRAME_SIZE)
+
+tEplKernel EdrvAllocTxMsgBuffer (tEdrvTxBuffer *pBuffer_p)
+{
+	tEplKernel 	Ret = kEplSuccessful;
+	DWORD		dwChannel;
+
+	if ( pBuffer_p->m_uiMaxBufferLen > EDRV_MAX_FRAME_SIZE )
 	{
 	     Ret = kEplEdrvNoFreeBufEntry;
 	     goto Exit;
 	}
 
-	if (EdrvInstance_l.m_pbTxBuf == NULL)
+	if ( NULL == EdrvInstance_l.m_pbTxBuf )
 	{
         printk("%s Tx buffers currently not allocated\n", __FUNCTION__);
 	    Ret = kEplEdrvNoFreeBufEntry;
 	    goto Exit;
 	}
 
-	for (dwChannel = 0; dwChannel < EDRV_MAX_TX_BUFFERS; dwChannel++)
+	for ( dwChannel = 0; dwChannel < EDRV_MAX_TX_BUFFERS; dwChannel++ )
 	{
-	    if (EdrvInstance_l.m_afTxBufUsed[dwChannel] == FALSE)
+	    if ( FALSE == EdrvInstance_l.m_afTxBufUsed[dwChannel] )
 	    {
 	        // free channel found
 	        EdrvInstance_l.m_afTxBufUsed[dwChannel] = TRUE;
@@ -857,7 +916,7 @@ tEplKernel EdrvAllocTxMsgBuffer       (tEdrvTxBuffer * pBuffer_p)
 	    }
 	}
 
-	if (dwChannel >= EDRV_MAX_TX_BUFFERS)
+	if ( dwChannel >= EDRV_MAX_TX_BUFFERS )
 	{
 	    Ret = kEplEdrvNoFreeBufEntry;
 	    goto Exit;
@@ -880,9 +939,9 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvReleaseTxMsgBuffer     (tEdrvTxBuffer * pBuffer_p)
+tEplKernel EdrvReleaseTxMsgBuffer (tEdrvTxBuffer *pBuffer_p)
 {
-	unsigned int 	uiBufferNumber;
+	UINT 	uiBufferNumber;
 
 	uiBufferNumber = pBuffer_p->m_BufferNumber.m_dwVal;
 
@@ -896,9 +955,10 @@ tEplKernel EdrvReleaseTxMsgBuffer     (tEdrvTxBuffer * pBuffer_p)
 }
 //------------------------------------------------------------------------------
 /**
-\brief 		EdrvPtpRead
+\brief 		EdrvReadSystim
 
-	   	    Reads the current SYSTIM register time in struct timespec format
+	   	    I210 specific routine which reads the current SYSTIM register time in
+	   	    struct timespec format.
 
 \param 		psTime_p 		timespec struct to hold the current time
 
@@ -908,7 +968,7 @@ tEplKernel EdrvReleaseTxMsgBuffer     (tEdrvTxBuffer * pBuffer_p)
 
 */
 //------------------------------------------------------------------------------
-static DWORD EdrvPtpRead(struct timespec *psTime_p)
+static DWORD EdrvReadSystim (struct timespec *psTime_p)
 {
 	DWORD dwSec, dwNsec, dwPsec;
 
@@ -923,9 +983,9 @@ static DWORD EdrvPtpRead(struct timespec *psTime_p)
 }
 //------------------------------------------------------------------------------
 /**
-\brief 		EdrvPtpWrite
+\brief 		EdrvWriteSystim
 
-   	   	    Writes a value into SYSTIM register
+   	   	    I210 specific routine which writes a value into SYSTIM register
 
 \param 		psTime_p 	timespec struct having the time to write
 
@@ -933,7 +993,8 @@ static DWORD EdrvPtpRead(struct timespec *psTime_p)
 
 */
 //------------------------------------------------------------------------------
-static void EdrvPtpWrite(const struct timespec *psTime_p)
+
+static void EdrvWriteSystim (const struct timespec *psTime_p)
 {
 	EDRV_REGDW_WRITE(EDRV_SYSTIML_REG, psTime_p->tv_nsec);
 	EDRV_REGDW_WRITE(EDRV_SYSTIMH_REG, psTime_p->tv_sec);
@@ -942,9 +1003,9 @@ static void EdrvPtpWrite(const struct timespec *psTime_p)
 /**
 \brief 		EdrvGetMacClock()
 
-	   	   	Retrieves the current MAC time
+	   	   	I210 specific routine which retrieves the current MAC time
 
-\param 		void
+\param 		pqwCurtime_p	pointer to the variable to receive current MAC time
 
 \return 	Errorcode
 
@@ -954,13 +1015,13 @@ static void EdrvPtpWrite(const struct timespec *psTime_p)
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvGetMacClock( QWORD	*pqwCurtime_p)
+tEplKernel EdrvGetMacClock (QWORD	*pqwCurtime_p)
 {
 	tEplKernel 	Ret = kEplSuccessful;
 	DWORD		timh, timl;
 	DWORD		dwReg;
 
-	if (NULL == pqwCurtime_p)
+	if ( NULL == pqwCurtime_p )
 	{
 		Ret = kEplNoResource;
 		goto Exit;
@@ -975,7 +1036,7 @@ tEplKernel EdrvGetMacClock( QWORD	*pqwCurtime_p)
 	timl = EDRV_REGDW_READ(EDRV_AUXSTMPL0);
 	timh = EDRV_REGDW_READ(EDRV_AUXSTMPH0);
 
-	*pqwCurtime_p = (QWORD)timh * 1000000000 + (QWORD)timl;
+	*pqwCurtime_p = (QWORD)timh * SEC_TO_NSEC + (QWORD)timl;
 
 Exit:
 	return Ret;
@@ -986,21 +1047,29 @@ Exit:
 \brief 		EdrvSendTxMsg()
 
 	   	    Handle the packet to be transmitted to the Controller with the specific
-	   	    launch time
+	   	    launch time.
 
-\param 		void
+\param 		pTxBuffer_p		pointer to TxBuffer structure to be handles to the
+							controller to send.
 
 \return 	Errorcode
 
 \retval 	kEplSuccessful
 
+\retval		kEplEdrvBufNotExisting
+
+\retval		kEplEdrvNoFreeTxDesc
+
+\retval		kEplEdrvNoFreeBufEntry
+
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvSendTxMsg (tEdrvTxBuffer * pTxBuffer_p)
+
+tEplKernel EdrvSendTxMsg (tEdrvTxBuffer *pTxBuffer_p)
 {
 	tEplKernel      	Ret = kEplSuccessful;
 
-	unsigned int    	uiBufferNumber;
+	UINT		    	uiBufferNumber;
 	tEdrvQueue			*pTxQueue;
 	INT					iQueue = 0,iIndex = 0;
 	dma_addr_t 			TxDma;
@@ -1009,7 +1078,7 @@ tEplKernel EdrvSendTxMsg (tEdrvTxBuffer * pTxBuffer_p)
 
 	uiBufferNumber = pTxBuffer_p->m_BufferNumber.m_dwVal;
 
-	if ((uiBufferNumber >= EDRV_MAX_TX_BUFFERS)
+	if ( (uiBufferNumber >= EDRV_MAX_TX_BUFFERS )
 	        || (EdrvInstance_l.m_afTxBufUsed[uiBufferNumber] == FALSE))
 	{
 			Ret = kEplEdrvBufNotExisting;
@@ -1019,7 +1088,7 @@ tEplKernel EdrvSendTxMsg (tEdrvTxBuffer * pTxBuffer_p)
 	pTxQueue = EdrvInstance_l.m_pTxQueue[iQueue];
 	iIndex = pTxQueue->m_iNextDesc;
 
-	if(((iIndex + 1) & EDRV_MAX_TTX_DESC_LEN) == pTxQueue->m_iNextWb)
+	if ( ((iIndex + 1) & EDRV_MAX_TTX_DESC_LEN) == pTxQueue->m_iNextWb )
 	{
 			Ret = kEplEdrvNoFreeTxDesc;
 			goto Exit;
@@ -1033,8 +1102,8 @@ tEplKernel EdrvSendTxMsg (tEdrvTxBuffer * pTxBuffer_p)
 	qwLaunchTime = pTxBuffer_p->m_qwLaunchTime;
 
 	// Scale the launch time to 32 nsecs unit
-	do_div(qwLaunchTime,1000000000);
-	qwTime = pTxBuffer_p->m_qwLaunchTime - (qwLaunchTime * 1000000000);
+	do_div(qwLaunchTime,SEC_TO_NSEC);
+	qwTime = pTxBuffer_p->m_qwLaunchTime - (qwLaunchTime * SEC_TO_NSEC);
 	do_div(qwTime,32);
 	pTtxDesc->m_CtxtDesc.m_dwLaunchTime = qwTime;
 
@@ -1045,7 +1114,7 @@ tEplKernel EdrvSendTxMsg (tEdrvTxBuffer * pTxBuffer_p)
 		   	   	   	  	  pTxBuffer_p->m_pbBuffer,\
 		   	   	   	  	  pTxBuffer_p->m_uiTxMsgLen,DMA_TO_DEVICE );
 
-	if (dma_mapping_error(&EdrvInstance_l.m_pPciDev->dev,TxDma))
+	if ( dma_mapping_error(&EdrvInstance_l.m_pPciDev->dev,TxDma) )
 	{
 	   	Ret = kEplEdrvNoFreeBufEntry;
 	    goto Exit;
@@ -1060,20 +1129,20 @@ tEplKernel EdrvSendTxMsg (tEdrvTxBuffer * pTxBuffer_p)
 	pTxQueue->m_PktBuff[iIndex].m_pVirtAddr = pTxBuffer_p->m_pbBuffer;
 	pTxQueue->m_PktBuff[iIndex].m_uilen = pTxBuffer_p->m_uiTxMsgLen;
 
-	pTtxDesc->m_Adv_desc.m_sRead.m_le_qwBufferAddr = cpu_to_le64(TxDma);
-	pTtxDesc->m_Adv_desc.m_sRead.m_dwCmdTypeLen = (unsigned int) pTxBuffer_p->m_uiTxMsgLen;
-	pTtxDesc->m_Adv_desc.m_sRead.m_dwCmdTypeLen |= ( EDRV_TDESC_CMD_DEXT | \
+	pTtxDesc->m_Advdesc.m_sRead.m_le_qwBufferAddr = cpu_to_le64(TxDma);
+	pTtxDesc->m_Advdesc.m_sRead.m_dwCmdTypeLen = (unsigned int) pTxBuffer_p->m_uiTxMsgLen;
+	pTtxDesc->m_Advdesc.m_sRead.m_dwCmdTypeLen |= ( EDRV_TDESC_CMD_DEXT | \
 													 EDRV_TDESC_DTYP_ADV | \
 													 EDRV_TDESC_CMD_EOP  | \
 													 EDRV_TDESC_CMD_IFCS | \
 													 EDRV_TDESC_CMD_RS) ;
 
-	pTtxDesc->m_Adv_desc.m_sRead.m_dwStatusIdxPaylen = (pTxBuffer_p->m_uiTxMsgLen << 14);
+	pTtxDesc->m_Advdesc.m_sRead.m_dwStatusIdxPaylen = (pTxBuffer_p->m_uiTxMsgLen << 14);
 
 	iIndex =  ((iIndex + 1) & EDRV_MAX_TTX_DESC_LEN);
 	// increment Tx descriptor queue tail pointer
 	pTxQueue->m_iNextDesc = iIndex;
-	// HAndle the frame to Hw
+	// Handle the frame to Hw
 	EDRV_REGDW_WRITE(EDRV_TDTAIL(iQueue),(iIndex * 2) );
 
 Exit:
@@ -1095,21 +1164,37 @@ Exit:
 */
 //------------------------------------------------------------------------------
 
-tEplKernel EdrvReleaseRxBuffer(tEdrvRxBuffer* pRxBuffer_p)
+tEplKernel EdrvReleaseRxBuffer(tEdrvRxBuffer *pRxBuffer_p)
 {
 	tEplKernel      Ret = kEplSuccessful;
 	return Ret;
 }
 
+/**
+ * 	Interrupt Handling Routines
+ *
+ * 	The I210 uses MSI-X interrupt mechanism for interrupt handling.
+ * 	Two MSI-X vectors are used by the driver to handle interrupts.
+ *
+ * 	One for handling Tx-Rx queue cause such as descriptor write back, queue errors etc.
+ *
+ * 	Second is used to handle timer interrupts and enable the I210 hardware timer as a source
+ * 	for HighResk time module
+ *
+ */
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvOtherInterrupt()
 
-	   	   	ISR for Other interrupt causes ( Timer interrupt)
+	   	   	ISR for Other interrupt causes ( Timer interrupt). Calls timer callback
+	   	   	of HighResk module from here.
 
-\param 		iIrqNum		System assigned Irq No
 
-\param		pInstData	Token
+\param 		iIrqNum_p		System assigned Irq No
+
+\param		pInstData_p		Token passed during interrupt registration
 
 \return 	irqreturn_t
 
@@ -1117,13 +1202,15 @@ tEplKernel EdrvReleaseRxBuffer(tEdrvRxBuffer* pRxBuffer_p)
 
 */
 //------------------------------------------------------------------------------
-static irqreturn_t EdrvOtherInterrupt (int iIrqNum, void *pInstData)
+
+
+static irqreturn_t EdrvOtherInterrupt (INT iIrqNum_p, void *pInstData_p)
 {
 	DWORD        dwStatus;
 	DWORD		 dwReg;
 	INT          iHandled = IRQ_HANDLED;
 
-	if(pInstData != EdrvInstance_l.m_pPciDev)
+	if(pInstData_p != EdrvInstance_l.m_pPciDev)
 	{
 		iHandled = IRQ_NONE;
 		goto Exit;
@@ -1154,13 +1241,16 @@ Exit:
 	return iHandled;
 }
 
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvInterruptHandler()
 
 	   	   	interrupt handler for Queue causes(Rx - Tx descriptor write back)
 
-\param 		void
+\param 		iIrqNum_p			System assigned Irq No
+
+\param		ppDevInstData_p		Token passed during interrupt registration
 
 \return 	Errorcode
 
@@ -1168,14 +1258,16 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
+
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19)
-static irqreturn_t TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p)
+static irqreturn_t TgtEthIsr (INT nIrqNum_p, void* ppDevInstData_p)
 #else
-static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRegs_p)
+static INT TgtEthIsr (INT nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRegs_p)
 #endif
 {
 	DWORD			dwReg;
-	int             iHandled;
+	INT             iHandled;
 	INT				iIndex;
 	tEdrvQVector 	*pQVector = (tEdrvQVector *)ppDevInstData_p;
 	tEdrvQueue 		*pTxQueue;
@@ -1198,13 +1290,13 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	dwReg = EDRV_REGDW_READ(EDRV_INTR_READ_REG);
 
 	// Process Rx with priority over Tx
-	if ((pRxQueue != NULL) && (dwReg & EDRV_INTR_ICR_RXDW))
+	if ( (pRxQueue != NULL) && (dwReg & EDRV_INTR_ICR_RXDW) )
 	{
 		tEdrvAdvRxDesc*    pAdvRxDesc;
 		tEdrvRxBuffer      RxBuffer;
 		iIndex = pRxQueue->m_iNextWb;
 
-		// Clear the Rx writeback bit
+		// Clear the Rx write-back bit
 		dwReg &= ~EDRV_INTR_ICR_RXDW;
 
 		pAdvRxDesc = EDRV_GET_RX_DESC(pRxQueue,iIndex);
@@ -1235,12 +1327,13 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 										DMA_FROM_DEVICE);
 
 				// Forward the Rcv packet to DLL
-				if(NULL != EdrvInstance_l.m_InitParam.m_pfnRxHandler)
+				if( NULL != EdrvInstance_l.m_InitParam.m_pfnRxHandler )
 				{
 					EdrvInstance_l.m_InitParam.m_pfnRxHandler(&RxBuffer);
 				}
 
 			}
+
 			// Prepare descriptor for next Rcv
 			pAdvRxDesc->sRead.m_le_qwBufferAddr = cpu_to_le64(pRxQueue->m_PktBuff[iIndex].m_DmaAddr);
 			pAdvRxDesc->sRead.m_le_qwHeaderAddr = 0;
@@ -1258,7 +1351,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 	}
 
 	// Process Tx
-	if ((pTxQueue != NULL) && (dwReg & EDRV_INTR_ICR_TXDW))
+	if ( (pTxQueue != NULL) && (dwReg & EDRV_INTR_ICR_TXDW) )
 	{
 
 		tEdrvTtxDesc		*pTtxDesc;
@@ -1271,11 +1364,11 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 		iIndex = pTxQueue->m_iNextWb;
 
 		pTtxDesc = EDRV_GET_TTX_DESC(pTxQueue,iIndex);
-		pAdvTxDesc = &(pTtxDesc->m_Adv_desc);
+		pAdvTxDesc = &(pTtxDesc->m_Advdesc);
 
 		do
 		{
-			if(pAdvTxDesc->m_sWb.m_le_dwstatus & EDRV_TDESC_STATUS_DD)
+			if ( pAdvTxDesc->m_sWb.m_le_dwstatus & EDRV_TDESC_STATUS_DD )
 			{
 				// Process the send packet
 				tEdrvTxBuffer*  pTxBuffer;
@@ -1291,10 +1384,10 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 												 pTxQueue->m_PktBuff[iIndex].m_uilen, \
 												 DMA_TO_DEVICE);
 				EDRV_COUNT_TX;
-				if (pTxBuffer != NULL)
+				if ( NULL != pTxBuffer )
 				{
 					 // Call Tx handler of Data link layer
-					if (pTxBuffer->m_pfnTxHandler != NULL)
+					if (NULL != pTxBuffer->m_pfnTxHandler  )
 					{
 							pTxBuffer->m_pfnTxHandler(pTxBuffer);
 					}
@@ -1309,7 +1402,7 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 				pTxQueue->m_iNextWb = iIndex;
 
 				pTtxDesc = EDRV_GET_TTX_DESC(pTxQueue,iIndex);
-				pAdvTxDesc = &(pTtxDesc->m_Adv_desc);
+				pAdvTxDesc = &(pTtxDesc->m_Advdesc);
 
 			}
 			else
@@ -1321,17 +1414,21 @@ static int TgtEthIsr (int nIrqNum_p, void* ppDevInstData_p, struct pt_regs* ptRe
 		}while(pAdvTxDesc->m_sWb.m_le_dwstatus & EDRV_TDESC_STATUS_DD);
 	}
 
-	// Reset the ICR with the values read minus values processed here
+	// Set the values in ICR again which were not processed here so that they are available
+	// for processing in other ISR
 	EDRV_REGDW_WRITE(EDRV_INTR_SET_REG,dwReg);
 
 Exit:
 	return iHandled;
+
 }
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvPutHwSemaphoreGeneric()
 
-	   	   	Release the semaphore
+	   	   	I210 specific routine used to release the semaphore acquired before
 
 \param 		void
 
@@ -1339,7 +1436,9 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-void EdrvPutHwSemaphoreGeneric(void)
+
+
+void EdrvPutHwSemaphoreGeneric ( void )
 {
 	DWORD dwSwsm;
 
@@ -1349,11 +1448,14 @@ void EdrvPutHwSemaphoreGeneric(void)
 
 	EDRV_REGDW_WRITE(EDRV_SWSM_REG, dwSwsm);
 }
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvGetHwSemaphore
 
-	   	    Acquire the HW semaphore to access the PHY or NVM
+	   	    I210 specific routine used to acquire the Hardware semaphore to access
+	   	    the PHY registers
 
 \param 		void
 
@@ -1361,15 +1463,19 @@ void EdrvPutHwSemaphoreGeneric(void)
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvGetHwSemaphore(void)
+
+
+tEplKernel EdrvGetHwSemaphore ( void )
 {
 	DWORD 		dwSwsm;
 	tEplKernel  iResult =  kEplSuccessful;
-	INT 		iTimeout = 100;
+	INT 		iTimeout;
 	INT 		iIndex = 0;
 
+	iTimeout = EDRV_PHY_SEMPHORE_TIMEOUT;
+
 	// Get the FW semaphore.
-	for (iIndex = 0; iIndex < iTimeout; iIndex++)
+	for ( iIndex = 0; iIndex < iTimeout; iIndex++ )
 	{
 		dwSwsm = EDRV_REGDW_READ(EDRV_SWSM_REG);
 		EDRV_REGDW_WRITE(EDRV_SWSM_REG, dwSwsm | EDRV_SWSM_SWESMBI);
@@ -1393,11 +1499,14 @@ tEplKernel EdrvGetHwSemaphore(void)
 Exit:
 	return iResult;
 }
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvPutHwSemaphore
 
-	   	   	Release hardware semaphore used to access the PHY or NVM
+	   	    I210 specific routine used to release hardware semaphore used to
+	   	    access the PHY
 
 \param 		void
 
@@ -1405,7 +1514,9 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-void EdrvPutHwSemaphore(void)
+
+
+void EdrvPutHwSemaphore ( void )
 {
 	DWORD dwSwsm;
 
@@ -1415,12 +1526,14 @@ void EdrvPutHwSemaphore(void)
 
 	EDRV_REGDW_WRITE(EDRV_SWSM_REG, dwSwsm);
 }
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 	   EdrvAcquireSwfwSync
 
-	   	   Acquire the SW/FW semaphore to access the PHY or NVM.  The mask
-  	   	   will also specify which port we're acquiring the lock for.
+	   	   I210 specific routine used to acquire the Software/Firmware semaphore
+	   	   to access the PHY.
 
 \param 	   wMask_p 		Specifies which semaphore to acquire
 
@@ -1432,7 +1545,9 @@ void EdrvPutHwSemaphore(void)
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvAcquireSwfwSync(WORD wMask_p)
+
+
+tEplKernel EdrvAcquireSwfwSync ( WORD wMask_p )
 {
 	DWORD 		dwSwfwSync;
 	DWORD 		dwSwmask = wMask_p;
@@ -1442,14 +1557,14 @@ tEplKernel EdrvAcquireSwfwSync(WORD wMask_p)
 
 	while (iIndex < iTimeout)
 	{
-		if (EdrvGetHwSemaphore())
+		if ( EdrvGetHwSemaphore() )
 		{
 			iResult = kEplNoResource;
 			goto Exit;
 		}
 
 		dwSwfwSync = EDRV_REGDW_READ(EDRV_SW_FW_SYNC);
-		if (!(dwSwfwSync & dwFwmask))
+		if ( !(dwSwfwSync & dwFwmask) )
 			break;
 
 		// Firmware currently using resource (dwFwmask)
@@ -1458,7 +1573,8 @@ tEplKernel EdrvAcquireSwfwSync(WORD wMask_p)
 		iIndex++;
 	}
 
-	if (iIndex == iTimeout) {
+	if ( iIndex == iTimeout )
+	{
 		printk("Driver can't access resource, SW_FW_SYNC timeout.\n");
 		iResult = kEplNoResource;
 		goto Exit;
@@ -1476,8 +1592,8 @@ Exit:
 /**
 \brief 		EdrvReleaseSwfwSync
 
-	   	    Release the SW/FW semaphore used to access the PHY or NVM.  The mask
-   	   	    will also specify which port we're releasing the lock for.
+	   	    I210 specific routine used to release the Software/Firmware semaphore
+	   	    used to access the PHY.
 
 \param 	  	wMask_p 	Specifies which semaphore to release
 
@@ -1485,12 +1601,13 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-void EdrvReleaseSwfwSync(WORD wMask_p)
+
+
+void EdrvReleaseSwfwSync (WORD wMask_p)
 {
 	DWORD dwSwfwSync;
 
-	while (EdrvGetHwSemaphore() != 0)
-		;
+	while ( EdrvGetHwSemaphore() != 0);
 
 	dwSwfwSync = EDRV_REGDW_READ(EDRV_SW_FW_SYNC);
 	dwSwfwSync &= ~wMask_p;
@@ -1502,7 +1619,7 @@ void EdrvReleaseSwfwSync(WORD wMask_p)
 /**
 \brief 		EdrvMacPsWrite()
 
-	   	   	Write function for PHY register through MDIO interface
+	   	   	I210 specific routine used to write into PHY register through MDIO interface
 
 \param 		iPhyreg_p	Phy Register to write
 
@@ -1514,10 +1631,12 @@ void EdrvReleaseSwfwSync(WORD wMask_p)
 
 */
 //------------------------------------------------------------------------------
-static void EdrvMdicWrite(unsigned int iPhyreg_p, unsigned short wValue_p)
+
+
+static void EdrvMdicWrite (unsigned int iPhyreg_p, unsigned short wValue_p)
 {
-	unsigned int	dwRegVal = 0;
-	unsigned int  dwMdicRd;
+	DWORD	dwRegVal = 0;
+	DWORD  	dwMdicRd;
 
 
 	dwRegVal &= ~(EDRV_MDIC_DATA_MASK | EDRV_MDIC_REGADD_MASK);
@@ -1541,7 +1660,7 @@ static void EdrvMdicWrite(unsigned int iPhyreg_p, unsigned short wValue_p)
 /**
 \brief 		EdrvMdicRead()
 
-	   	   	Read function for PHY register through MDIO interface
+	   	   	I210 specific routine used to read from PHY register through MDIO interface
 
 \param 		Phyreg_p    PHY register
 
@@ -1553,7 +1672,9 @@ static void EdrvMdicWrite(unsigned int iPhyreg_p, unsigned short wValue_p)
 
 */
 //------------------------------------------------------------------------------
-static WORD EdrvMdicRead(int iPhyreg_p)
+
+
+static WORD EdrvMdicRead (INT iPhyreg_p)
 {
 
 	DWORD		dwRegVal = 0;
@@ -1581,11 +1702,13 @@ static WORD EdrvMdicRead(int iPhyreg_p)
 	return wValue;
 
 }
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvFreeTxQueueBuffer
 
-	   	    Free the buffers for queue
+	   	    I210 specific routine used to free the buffers for queue
 
 \param 	 	pTxQueue_p   	Queue to be processed
 
@@ -1593,9 +1716,11 @@ static WORD EdrvMdicRead(int iPhyreg_p)
 
 */
 //------------------------------------------------------------------------------
-static void EdrvFreeTxQueueBuffer(tEdrvQueue *pTxQueue_p)
+
+
+static void EdrvFreeTxQueueBuffer (tEdrvQueue *pTxQueue_p)
 {
-	int iIndex;
+	INT iIndex;
 	for(iIndex = 0 ; iIndex < EDRV_MAX_RX_DESCRIPTOR ; iIndex++)
 	{
 	    // set report status for all descriptor
@@ -1609,11 +1734,13 @@ static void EdrvFreeTxQueueBuffer(tEdrvQueue *pTxQueue_p)
 
 	}
 }
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvFreeTxBuffers
 
-	   	    Free all Transmit buffers
+	   	    I210 specific routine used to free all Transmit buffers
 
 \param 		void
 
@@ -1621,7 +1748,9 @@ static void EdrvFreeTxQueueBuffer(tEdrvQueue *pTxQueue_p)
 
 */
 //------------------------------------------------------------------------------
-static void EdrvFreeTxBuffers(void)
+
+
+static void EdrvFreeTxBuffers (void)
 {
 	INT iIndex;
 	for(iIndex = 0; iIndex < EdrvInstance_l.m_TxMaxQueue; iIndex++ )
@@ -1629,11 +1758,13 @@ static void EdrvFreeTxBuffers(void)
 		EdrvFreeTxQueueBuffer(EdrvInstance_l.m_pTxQueue[iIndex]);
 	}
 }
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvFreeTxQueues
 
-       	    Free the memory for Tx queues
+       	    I210 specific routine used to free the memory for Tx queues
 
 \param 		void
 
@@ -1641,31 +1772,33 @@ static void EdrvFreeTxBuffers(void)
 
 */
 //------------------------------------------------------------------------------
-static void EdrvFreeTxQueues(void)
+
+
+static void EdrvFreeTxQueues (void)
 {
 	tEdrvQueue *pTxQueue;
-	int iIndex;
+	INT		    iIndex;
 
 	for(iIndex = 0; iIndex < EdrvInstance_l.m_TxMaxQueue ;iIndex++)
 	{
 		pTxQueue = EdrvInstance_l.m_pTxQueue[iIndex];
 
-		if(NULL == pTxQueue)
+		if( NULL == pTxQueue )
 		{
 			break;
 		}
-		if(NULL != pTxQueue->m_pbBuf)
+		if( NULL != pTxQueue->m_pbBuf )
 		{
-			kfree(pTxQueue->m_pbBuf);
+			kfree(pTxQueue->m_pbBuf );
 		}
 
-		if(NULL != pTxQueue->m_PktBuff)
+		if( NULL != pTxQueue->m_PktBuff )
 		{
 			kfree(pTxQueue->m_PktBuff);
 		}
 
 
-		if (NULL != pTxQueue->m_pDescVirt)
+		if ( NULL != pTxQueue->m_pDescVirt )
 		{
 			 dma_free_coherent(&EdrvInstance_l.m_pPciDev->dev,EDRV_TX_DESCS_SIZE,pTxQueue->m_pDescVirt,pTxQueue->m_DescDma);
 			 kfree(pTxQueue);
@@ -1677,11 +1810,14 @@ static void EdrvFreeTxQueues(void)
 
 	EdrvInstance_l.m_TxMaxQueue = 0;
 }
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvInitTxQueue
 
-	   	    Initialize the Tx queue with descriptors and memory resources
+	   	    I210 specific routine used to initialize the Tx queue with descriptors
+	   	    and memory resources
 
 \param 		pTxQueue_p 		Pointer to the queue structure to initialize
 
@@ -1689,10 +1825,12 @@ static void EdrvFreeTxQueues(void)
 
 */
 //------------------------------------------------------------------------------
-static tEplKernel EdrvInitTxQueue(tEdrvQueue *pTxQueue_p)
+
+
+static tEplKernel EdrvInitTxQueue (tEdrvQueue *pTxQueue_p)
 {
 	tEplKernel iResult = kEplSuccessful;
-	INT iDescSize;
+	INT 	   iDescSize;
 
 	// Allocate Tx Descriptor
 	printk("{%s}:Allocating Tx Desc %p\n",__FUNCTION__,pTxQueue_p);
@@ -1724,11 +1862,13 @@ static tEplKernel EdrvInitTxQueue(tEdrvQueue *pTxQueue_p)
 Exit:
 	return iResult;
 }
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 		EdrvConfigureTxQueue
 
-	   	    Configure Transmit queue
+	   	    I210 specific routine used to configure Transmit queue
 
 \param 		pTxQueue_p 		Pointer to the queue structure to configure
 
@@ -1736,7 +1876,9 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-static void EdrvConfigureTxQueue(tEdrvQueue *pTxQueue_p )
+
+
+static void EdrvConfigureTxQueue (tEdrvQueue *pTxQueue_p )
 {
 	QWORD 	qwTxDescDma;
 	DWORD	dwReg;
@@ -1775,7 +1917,7 @@ static void EdrvConfigureTxQueue(tEdrvQueue *pTxQueue_p )
 	EDRV_REGDW_WRITE(EDRV_TXDCTL(iQueue),dwReg);
 	// Poll till queue gets enabled
 	printk("Poll TXDCTL");
-	for(iIndex = 0; iIndex < 3 ; iIndex++ )
+	for(iIndex = 0; iIndex < EDRV_POLL_TIMEOUT ; iIndex++ )
 	{
 		if((EDRV_REGDW_READ(EDRV_TXDCTL(iQueue)) & EDRV_TXDCTL_QUEUE_EN))
 		{
@@ -1783,7 +1925,7 @@ static void EdrvConfigureTxQueue(tEdrvQueue *pTxQueue_p )
 		}
 			msleep(1);
 	}
-	if(iIndex == 3)
+	if(iIndex == EDRV_POLL_TIMEOUT)
 	{
 		printk("...Fail\n");
 	}
@@ -1797,7 +1939,7 @@ static void EdrvConfigureTxQueue(tEdrvQueue *pTxQueue_p )
 /**
 \brief 		EdrvFreeRxQueues
 
-	   	    Free the memory for Rx queues
+	   	    I210 specific routine used to free the memory for Rx queues
 
 \param 		void
 
@@ -1805,10 +1947,10 @@ static void EdrvConfigureTxQueue(tEdrvQueue *pTxQueue_p )
 
 */
 //------------------------------------------------------------------------------
-static void EdrvFreeRxQueues(void)
+static void EdrvFreeRxQueues (void)
 {
 	tEdrvQueue *pRxQueue = NULL;
-	int iIndex;
+	INT	        iIndex;
 
 
 	for(iIndex = 0; iIndex < EdrvInstance_l.m_RxMaxQueue ;iIndex++)
@@ -1845,7 +1987,7 @@ static void EdrvFreeRxQueues(void)
 /**
 \brief 		EdrvFreeRxQueueBuffer
 
-	   	    Free memory allocated for Receive buffers
+	   	    I210 specific routine used to free memory allocated for Receive buffers
 
 \param 		pRxQueue_p 		Pointer to the queue structure to process
 
@@ -1853,9 +1995,9 @@ static void EdrvFreeRxQueues(void)
 
 */
 //------------------------------------------------------------------------------
-static void EdrvFreeRxQueueBuffer(tEdrvQueue *pRxQueue_p)
+static void EdrvFreeRxQueueBuffer (tEdrvQueue *pRxQueue_p)
 {
-	int iIndex;
+	INT	 iIndex;
 
 	for(iIndex = 0 ; iIndex < EDRV_MAX_RX_DESCRIPTOR ; iIndex++)
 	{
@@ -1871,7 +2013,7 @@ static void EdrvFreeRxQueueBuffer(tEdrvQueue *pRxQueue_p)
 /**
 \brief 		EdrvFreeRxBuffers
 
-	   	    Free memory allocated for Receive buffers
+	   	    I210 specific routine used to free memory allocated for Receive buffers
 
 \param 		void
 
@@ -1879,7 +2021,7 @@ static void EdrvFreeRxQueueBuffer(tEdrvQueue *pRxQueue_p)
 
 */
 //------------------------------------------------------------------------------
-static void EdrvFreeRxBuffers(void)
+static void EdrvFreeRxBuffers (void)
 {
 	INT	 iIndex;
 	for(iIndex = 0; iIndex < EdrvInstance_l.m_RxMaxQueue; iIndex++ )
@@ -1891,7 +2033,7 @@ static void EdrvFreeRxBuffers(void)
 /**
 \brief 		EdrvInitRxQueue
 
-	   	    Initialize the Rx queue with descriptors and memory resources
+	   	    I210 specific routine used to initialize the Rx queue with descriptors and memory resources
 
 \param 		pRxQueue_p 		Pointer to the queue structure to initialize
 
@@ -1899,12 +2041,13 @@ static void EdrvFreeRxBuffers(void)
 
 */
 //------------------------------------------------------------------------------
-static tEplKernel EdrvInitRxQueue(tEdrvQueue *pRxQueue_p)
+static tEplKernel EdrvInitRxQueue (tEdrvQueue *pRxQueue_p)
 {
 	tEplKernel Ret = kEplSuccessful;
 	INT		   iDescSize;
-	// Allocate Tx Descriptor
 
+
+	// Allocate Tx Descriptor
 	printk("{%s}:Allocating Rx Desc %p\n",__FUNCTION__,pRxQueue_p);
 	iDescSize = ALIGN(EDRV_RX_DESCS_SIZE,4096);
 	pRxQueue_p->m_pDescVirt = dma_alloc_coherent(&EdrvInstance_l.m_pPciDev->dev,\
@@ -1949,7 +2092,8 @@ Exit:
 /**
 \brief 		EdrvAllocRxBuffer
 
-	   	    Allocate receive buffers and associate with corresponding descriptor
+	   	    I210 specific routine used to allocate receive buffers and associate
+	   	    with corresponding descriptor
 
 \param 		pRxQueue_p 		Pointer to the queue structure to allocate buffers
 
@@ -1957,9 +2101,9 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-static tEplKernel EdrvAllocRxBuffer(tEdrvQueue *pRxQueue_p)
+static tEplKernel EdrvAllocRxBuffer (tEdrvQueue *pRxQueue_p)
 {
-	int 			iIndex;
+	INT 			iIndex;
 	dma_addr_t  	RxDma;
 	tEplKernel  	Ret = kEplSuccessful;
 	tEdrvAdvRxDesc *RxDesc;
@@ -1992,7 +2136,7 @@ Exit:
 /**
 \brief 		EdrvConfigureRxQueue
 
-	   	   	Configure Receive queue
+	   	   	I210 specific routine used to configure Receive queue
 
 \param 		pRxQueue_p 		Pointer to the queue structure to configure
 
@@ -2000,7 +2144,7 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-static void EdrvConfigureRxQueue(tEdrvQueue *pRxQueue_p )
+static void EdrvConfigureRxQueue (tEdrvQueue *pRxQueue_p )
 {
 	QWORD 	qwRxDescDma;
 	DWORD	dwReg;
@@ -2037,7 +2181,7 @@ static void EdrvConfigureRxQueue(tEdrvQueue *pRxQueue_p )
 	EDRV_REGDW_WRITE(EDRV_RXDCTL(iQueue),dwReg);
 
 	printk("Poll RXDCTL");
-	for(iIndex = 0 ;iIndex < 3;iIndex++)
+	for(iIndex = 0 ; iIndex < EDRV_POLL_TIMEOUT ; iIndex++)
 	{
 		dwReg = EDRV_REGDW_READ(EDRV_RXDCTL(iQueue));
 		if(( dwReg & EDRV_RXDCTL_QUEUE_EN))
@@ -2048,7 +2192,7 @@ static void EdrvConfigureRxQueue(tEdrvQueue *pRxQueue_p )
 		msleep(1);
 	}
 
-	if(iIndex == 3)
+	if(iIndex == EDRV_POLL_TIMEOUT)
 	{
 		printk("...Fail\n");
 	}
@@ -2061,8 +2205,8 @@ static void EdrvConfigureRxQueue(tEdrvQueue *pRxQueue_p )
 /**
 \brief 		EdrvInitQavMode
 
-	   	    Configure the device for Qav mode using 1 Tx queue as SR queue with
-	   	    Launch time logic
+	   	    I210 specific routine used to configure the device for Qav mode using
+	   	    1 Tx queue as SR queue with launch time logic
 
 \param 		void
 
@@ -2070,7 +2214,9 @@ static void EdrvConfigureRxQueue(tEdrvQueue *pRxQueue_p )
 
 */
 //------------------------------------------------------------------------------
-static void EdrvInitQavMode( void )
+
+
+static void EdrvInitQavMode (void)
 {
 	DWORD	  dwTqavctrl;
 	DWORD	  dwLaunchOff;
@@ -2115,7 +2261,8 @@ static void EdrvInitQavMode( void )
 /**
 \brief 		EdrvWriteIvar
 
-	   	    Interrupt vector mapping of Tx-Rx causes in the IVAR register
+	   	    I210 specific routine for interrupt vector mapping of Tx-Rx causes
+	   	    in the IVAR register
 
 \param 		iVector_p		Vector No to be assigned
 
@@ -2127,9 +2274,11 @@ static void EdrvInitQavMode( void )
 
 */
 //------------------------------------------------------------------------------
-static void EdrvWriteIvar(INT iVector_p,INT iIndex_p, INT iOffset_p)
+
+
+static void EdrvWriteIvar (INT iVector_p,INT iIndex_p, INT iOffset_p)
 {
-	u32 dwIvar = EDRV_REGDW_READ((EDRV_IVAR0_REG + (iIndex_p << 2)));
+	DWORD	 dwIvar = EDRV_REGDW_READ((EDRV_IVAR0_REG + (iIndex_p << 2)));
 
 	// clear any bits that are currently set
 	dwIvar &= ~((u32)0xFF << iOffset_p);
@@ -2144,7 +2293,8 @@ static void EdrvWriteIvar(INT iVector_p,INT iIndex_p, INT iOffset_p)
 /**
 \brief 		EdrvRequestMsix
 
-	   	    Request ISR for MSI-X vectors and map vectors to respective causes
+	   	    I210 specific routine used to request ISR for MSI-X vectors and
+	   	    map vectors to respective causes
 
 \param 		void
 
@@ -2152,7 +2302,7 @@ static void EdrvWriteIvar(INT iVector_p,INT iIndex_p, INT iOffset_p)
 
 */
 //------------------------------------------------------------------------------
-static INT EdrvRequestMsix(void)
+static INT EdrvRequestMsix (void)
 {
 	INT 			iVector = 0, iIndex = 0,dwReg;
 	INT 			iReturn = 0, iTxQueue,iRxQueue;
@@ -2163,7 +2313,7 @@ static INT EdrvRequestMsix(void)
 							EdrvOtherInterrupt, 0,\
 							DRIVER_NAME,\
 							EdrvInstance_l.m_pPciDev);
-	if (iReturn != 0)
+	if (0 != iReturn )
 	{
 	    goto Exit;
 	}
@@ -2177,7 +2327,7 @@ static INT EdrvRequestMsix(void)
 								TgtEthIsr, 0,\
 								pQvector->m_strName,\
 								pQvector);
-		if (iReturn != 0)
+		if ( 0 != iReturn )
 		{
 			   goto Exit;
 		}
@@ -2185,36 +2335,38 @@ static INT EdrvRequestMsix(void)
 
 	// Configure MSI-X
 
-	  dwReg = 0;
-	  dwReg = ( EDRV_INTR_GPIE_MULT_MSIX |\
-				 EDRV_INTR_GPIE_PBA |\
+	dwReg = 0;
+	dwReg = ( EDRV_INTR_GPIE_MULT_MSIX |\
+	     		 EDRV_INTR_GPIE_PBA |\
 				 EDRV_INTR_GPIE_NSICR );
 
-	   EDRV_REGDW_WRITE(EDRV_INTR_GPIE_REG,dwReg);
-	   iVector = 0;
-	   // Enable Msi-x for Other Cause;
-	   dwReg = EDRV_REGDW_READ(EDRV_IVAR_MISC);
-	   dwReg |= ((iVector | EDRV_IVAR_VALID) << 8);
-	   EDRV_REGDW_WRITE(EDRV_IVAR_MISC,dwReg);
+	EDRV_REGDW_WRITE(EDRV_INTR_GPIE_REG,dwReg);
+	iVector = 0;
+	// Enable Msi-x for Other Cause;
+	dwReg = EDRV_REGDW_READ(EDRV_IVAR_MISC);
+	dwReg |= ((iVector | EDRV_IVAR_VALID) << 8);
+	EDRV_REGDW_WRITE(EDRV_IVAR_MISC,dwReg);
 
-	   iVector++;
-	   // Map Tx0 and Rx0 Interrupt cause
-	   for(iIndex = 0 ; iIndex < EdrvInstance_l.m_NumQVectors ;iIndex++,iVector++)
-	   {
-		   iTxQueue = EdrvInstance_l.m_pTxQueue[iIndex]->m_iIndex;
-		   EdrvWriteIvar(iVector,
-				   	   	 iTxQueue >> 1,
-				   	   	 ((iTxQueue & 0x1) << 4) + 8);
-		   iRxQueue = EdrvInstance_l.m_pRxQueue[iIndex]->m_iIndex;
-		   EdrvWriteIvar(iVector,
-		   				      iRxQueue >> 1,
-		   		   		   	 ((iRxQueue & 0x1) << 4));
+	iVector++;
+	// Map Tx0 and Rx0 Interrupt cause
+	for(iIndex = 0 ; iIndex < EdrvInstance_l.m_NumQVectors ;iIndex++,iVector++)
+	{
+	   iTxQueue = EdrvInstance_l.m_pTxQueue[iIndex]->m_iIndex;
+	   EdrvWriteIvar(iVector,
+			   	     iTxQueue >> 1,
+				   	 ((iTxQueue & 0x1) << 4) + 8);
+	   iRxQueue = EdrvInstance_l.m_pRxQueue[iIndex]->m_iIndex;
+	   EdrvWriteIvar(iVector,
+				      iRxQueue >> 1,
+		   		   	 ((iRxQueue & 0x1) << 4));
 
-	   }
+	}
 
 Exit:
 	return iReturn;
 }
+
+
 //------------------------------------------------------------------------------
 /**
 \brief 			EdrvInitOne
@@ -2233,8 +2385,9 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-static INT EdrvInitOne(struct pci_dev *pPciDev,
-                       const struct pci_device_id *pId)
+
+
+static INT EdrvInitOne (struct pci_dev *pPciDev, const struct pci_device_id *pId)
 {
 	INT             iResult = 0;
 	tEdrvQueue 		*pQueue;
@@ -2243,7 +2396,10 @@ static INT EdrvInitOne(struct pci_dev *pPciDev,
 	INT             iIndex;
 	INT 			iNumVectors;
 	struct timespec sSysTime;
-	if (EdrvInstance_l.m_pPciDev != NULL)
+
+
+
+	if ( NULL != EdrvInstance_l.m_pPciDev  )
 	{
 		// Perform a sanity check to avoid insertion of module again
 	    printk("%s device %s discarded\n", __FUNCTION__, pci_name(pPciDev));
@@ -2260,7 +2416,7 @@ static INT EdrvInitOne(struct pci_dev *pPciDev,
 
 	EdrvInstance_l.m_pPciDev = pPciDev;
 
-	if (EdrvInstance_l.m_pPciDev == NULL)
+	if (NULL == EdrvInstance_l.m_pPciDev )
 	{
 	   printk("%s pPciDev==NULL\n", __FUNCTION__);
 	}
@@ -2353,9 +2509,13 @@ static INT EdrvInitOne(struct pci_dev *pPciDev,
  	msleep(5);
 
 	iIndex = 0;
-	while (iIndex < EDRV_AUTO_READ_DONE_TIMEOUT) {
+	while (iIndex < EDRV_AUTO_READ_DONE_TIMEOUT)
+	{
 		if (EDRV_REGDW_READ(EDRV_EECD_REG) & EDRV_EECD_AUTO_RD)
+		{
 			break;
+		}
+
 		msleep(1);
 		iIndex++;
 	}
@@ -2414,7 +2574,7 @@ static INT EdrvInitOne(struct pci_dev *pPciDev,
 	//Initialise the SYSTIM timer with current system time
 	EDRV_REGDW_WRITE(EDRV_TSAUXC, 0x0);
 	sSysTime = ktime_to_timespec(ktime_get_real());
-	EdrvPtpWrite(&sSysTime);
+	EdrvWriteSystim(&sSysTime);
 
 	// Clear the Statistic register
 	dwReg = EDRV_REGDW_READ(EDRV_STAT_TPT);
@@ -2440,7 +2600,7 @@ static INT EdrvInitOne(struct pci_dev *pPciDev,
 
 		iResult = pci_enable_msix(pPciDev,EdrvInstance_l.m_pMsixEntry,iNumVectors);
 
-		if(iResult != 0)
+		if( 0 != iResult )
 		{
 			printk("...Failed\n");
 			goto ExitFail;
@@ -2594,11 +2754,11 @@ static INT EdrvInitOne(struct pci_dev *pPciDev,
 	 dwReg &= ~EDRV_RCTL_LBM_CLEAR;
 	 dwReg |= (EDRV_RCTL_EN | EDRV_RCTL_BAM | EDRV_RCTL_SECRC | EDRV_RCTL_LPE);
 	 // Receive all packets
-	 #ifdef PROMICIOUS_MODE
+	 #ifdef PROMISCUOUS_MODE
 	 dwReg |= (EDRV_RCTL_UPE | EDRV_RCTL_MPE);
 	 #endif
 
-	 // Enable Recieve
+	 // Enable Receive
 	 EDRV_REGDW_WRITE(EDRV_RCTL_REG,dwReg);
 
 	 // configure Rx queues
@@ -2680,7 +2840,9 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-static void EdrvRemoveOne(struct pci_dev *pPciDev)
+
+
+static void EdrvRemoveOne (struct pci_dev *pPciDev)
 {
 	DWORD	 dwReg;
 	INT  	 iIndex;
@@ -2736,7 +2898,7 @@ static void EdrvRemoveOne(struct pci_dev *pPciDev)
 	dwReg &= ~EDRV_TXDCTL_SWFLSH;
 	EDRV_REGDW_WRITE(EDRV_TXDCTL(0),dwReg);
 
-	//Disable Rx
+
 	dwReg = EDRV_REGDW_READ(EDRV_RXDCTL(0));
 	dwReg &= ~EDRV_RXDCTL_SWFLUSH;
 	EDRV_REGDW_WRITE(EDRV_RXDCTL(0),dwReg);
@@ -2787,7 +2949,7 @@ static void EdrvRemoveOne(struct pci_dev *pPciDev)
 
 
 	// unmap controller's register space
-	if (EdrvInstance_l.m_pIoAddr != NULL)
+	if (NULL != EdrvInstance_l.m_pIoAddr  )
 	{
 	    iounmap(EdrvInstance_l.m_pIoAddr);
 	    EdrvInstance_l.m_pIoAddr = NULL;
@@ -2820,7 +2982,7 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-void EdrvSetCyclicFrequency(DWORD dwOffset)
+void EdrvSetCyclicFrequency (DWORD dwOffset)
 {
 	EDRV_REGDW_WRITE(EDRV_FREQOUT0,dwOffset);
 }
@@ -2842,11 +3004,13 @@ void EdrvSetCyclicFrequency(DWORD dwOffset)
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p,DWORD dwOffset)
+tEplKernel EdrvStartTimer (tEplTimerHdl* pTimerHdl_p,DWORD dwOffset)
 {
-	tEplKernel EplRet =  kEplSuccessful;
-	unsigned int dwReg;
+	tEplKernel 	 EplRet =  kEplSuccessful;
+	DWORD		 dwReg;
 	struct timespec ts;
+
+
 	if(NULL == pTimerHdl_p)
 	{
 		printk("Error Timer\n");
@@ -2860,7 +3024,7 @@ tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p,DWORD dwOffset)
 	dwReg |= ( EDRV_TSSDP_TS_SDP0_SEL_CLK0 | EDRV_TSSDP_TS_SDP0_EN);
 	EDRV_REGDW_WRITE(EDRV_TSSDP,dwReg);
 
-	EdrvPtpRead(&ts);
+	EdrvReadSystim(&ts);
 	ts.tv_nsec = ts.tv_nsec + dwOffset;
 	EDRV_REGDW_WRITE(EDRV_TRGTTIML0, ts.tv_nsec);
 	EDRV_REGDW_WRITE(EDRV_TRGTTIMH0, ts.tv_sec);
@@ -2901,10 +3065,10 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvStopTimer(tEplTimerHdl* pTimerHdl_p)
+tEplKernel EdrvStopTimer (tEplTimerHdl* pTimerHdl_p)
 {
-	tEplKernel EplRet =  kEplSuccessful;
-	unsigned int dwReg;
+	tEplKernel 	 EplRet =  kEplSuccessful;
+	DWORD	 	 dwReg;
 
 
 	if(*pTimerHdl_p != EdrvInstance_l.m_TimerHdl)
@@ -2942,12 +3106,14 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvEnableTimer(tEplTimerHdl* pTimerHdl_p)
+tEplKernel EdrvEnableTimer (tEplTimerHdl* pTimerHdl_p)
 {
-	tEplKernel EplRet =  kEplSuccessful;
-	unsigned int dwReg;
+	tEplKernel 		EplRet =  kEplSuccessful;
+	DWORD			dwReg;
 	struct timespec ts;
-	EdrvPtpRead(&ts);
+
+
+	EdrvReadSystim(&ts);
 
 	if(*pTimerHdl_p != EdrvInstance_l.m_TimerHdl)
 	{
@@ -2980,9 +3146,11 @@ Exit:
 
 */
 //------------------------------------------------------------------------------
-tEplKernel EdrvRegisterHighResCallback(tEplHighResCallback pfnHighResCb_p)
+tEplKernel EdrvRegisterHighResCallback (tEplHighResCallback pfnHighResCb_p)
 {
 	tEplKernel EplRet =  kEplSuccessful;
+
+
 	if(NULL == pfnHighResCb_p)
 	{
 		EplRet = kEplTimerThreadError;

@@ -144,8 +144,6 @@ static unsigned int uiCycleLen_g = 0;
 static unsigned int uiCurCycleLen_g = 0;
 static char *pLogFile_g = NULL;
 
-
-
 /* process image stuff */
 #include "xap.h"
 
@@ -241,6 +239,7 @@ static void printlog(char *fmt, ...)
     vfprintf(stderr, fmt, arglist);
     va_end(arglist);
 }
+
 
 //=========================================================================//
 //                                                                         //
@@ -456,7 +455,11 @@ int  main (int argc, char **argv)
     EplApiInitParam.m_dwSubnetMask              = SUBNET_MASK;
     EplApiInitParam.m_dwDefaultGateway          = 0;
     EPL_MEMCPY(EplApiInitParam.m_sHostname, sHostname, sizeof(EplApiInitParam.m_sHostname));
+#if EDRV_USE_TTTX != FALSE
     EplApiInitParam.m_uiSyncNodeId              = EPL_C_ADR_SYNC_ON_SOC;
+#else
+    EplApiInitParam.m_uiSyncNodeId              = EPL_C_ADR_SYNC_ON_SOA;
+#endif
     EplApiInitParam.m_fSyncOnPrcNode            = FALSE;
 
     // set callback functions
@@ -987,7 +990,7 @@ tEplKernel PUBLIC AppCbSync(void)
     {
         return EplRet;
     }
-#if 0
+
     uiCnt_g++;
 
     nodeVar_g[0].m_uiInput = AppProcessImageOut_g.CN1_M00_Digital_Input_8_Bit_Byte_1;
@@ -1041,7 +1044,7 @@ tEplKernel PUBLIC AppCbSync(void)
     AppProcessImageIn_g.CN1_M00_Digital_Ouput_8_Bit_Byte_1 = nodeVar_g[0].m_uiLeds;
     AppProcessImageIn_g.CN32_M00_Digital_Ouput_8_Bit_Byte_1 = nodeVar_g[1].m_uiLeds;
     AppProcessImageIn_g.CN110_M00_Digital_Ouput_8_Bit_Byte_1 = nodeVar_g[2].m_uiLeds;
-#endif
+
     return EplRet;
 }
 
@@ -1065,7 +1068,6 @@ void *powerlinkSyncThread(void * arg __attribute__((unused)))
 
 
 #endif
-
 
 // EOF
 

@@ -270,15 +270,15 @@ tEplKernel EdrvChangeFilter(tEdrvFilter*    pFilter_p,
                             unsigned int    uiCount_p,
                             unsigned int    uiEntryChanged_p,
                             unsigned int    uiChangeFlags_p);
-
-tEplKernel
-EdrvGetMacClock( QWORD	*pqwCurtime_p);
+#if EDRV_USE_TTTX != FALSE
+tEplKernel EdrvGetMacClock( QWORD	*pqwCurtime_p);
 
 void EdrvSetCyclicFrequency(DWORD dwOffset);
 tEplKernel EdrvStartTimer(tEplTimerHdl* pTimerHdl_p,DWORD dwOffset);
 tEplKernel EdrvStopTimer(tEplTimerHdl* pTimerHdl_p);
 tEplKernel EdrvEnableTimer(tEplTimerHdl* pTimerHdl_p);
 tEplKernel EdrvRegisterHighResCallback(tEplHighResCallback pfnHighResCb_p);
+#endif
 int EdrvGetDiagnostics(char* pszBuffer_p, int iSize_p);
 
 // EdrvCyclic module
